@@ -1,20 +1,17 @@
 import { useMemo } from "react";
 import { Button, Card, CardBody, User, Spacer, Progress, Divider, Spinner, Chip } from "@nextui-org/react";
-import { LogOut, LayoutDashboard, BookOpen, GraduationCap, Trophy, Coins, TrendingUp } from "lucide-react";
+import { LogOut, LayoutDashboard, BookOpen, GraduationCap, Trophy, Coins, TrendingUp, ChevronRight, Network, CheckSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { auth } from "../../config/firebase";
 import useUserStore from "../../stores/useUserStore";
 
-// Hooks de datos
 import { useMaterias } from "../../hooks/useMaterias";
 import { useElectivas } from "../../hooks/useElectivas";
 
-// AHORA RECIBIMOS 'userData' COMO PROP (Aquí vienen los datos de la carrera)
 const DashboardPage = ({ userData }) => {
   const navigate = useNavigate();
   const { user, clearUser } = useUserStore();
   
-  // 1. Traemos TODOS los datos (Plan y Electivas)
   const { materias, loading: loadingPlan } = useMaterias();
   const { electivas, configMetas, loading: loadingElectivas } = useElectivas();
 
@@ -23,19 +20,16 @@ const DashboardPage = ({ userData }) => {
     clearUser();
   };
 
-  // 2. CÁLCULOS ESTADÍSTICOS UNIFICADOS 🧠
   const stats = useMemo(() => {
-    // --- PLAN DE ESTUDIOS ---
+    // PLAN
     const totalMaterias = materias.length;
     const aprobadasPlan = materias.filter(m => m.estado === "Aprobada");
     const materiasFaltantes = totalMaterias - aprobadasPlan.length;
     
-    // Promedio
     const conNota = aprobadasPlan.filter(m => m.nota && !isNaN(parseFloat(m.nota)));
     const sumaNotas = conNota.reduce((acc, curr) => acc + parseFloat(curr.nota), 0);
     const promedio = conNota.length > 0 ? (sumaNotas / conNota.length).toFixed(2) : "-";
 
-    // Progreso por Año
     const niveles = [...new Set(materias.map(m => m.nivel))].sort((a,b) => a - b).filter(n => !isNaN(n));
     const progresoPorNivel = niveles.map(nivel => {
         const matsNivel = materias.filter(m => m.nivel === nivel);
@@ -48,11 +42,10 @@ const DashboardPage = ({ userData }) => {
         };
     });
 
-    // --- ELECTIVAS Y METAS ---
+    // ELECTIVAS
     const aprobadasElectivas = electivas.filter(e => e.estado === "Aprobada");
     const totalCreditos = aprobadasElectivas.reduce((acc, curr) => acc + (curr.creditos || 0), 0);
     
-    // Mapeamos las metas configuradas
     const metasSafe = Array.isArray(configMetas.metas) ? configMetas.metas : [];
     const metasStats = metasSafe.map(meta => {
         const objetivo = meta.creditos || 1;
@@ -61,13 +54,8 @@ const DashboardPage = ({ userData }) => {
     });
 
     return { 
-        promedio, 
-        totalMaterias, 
-        aprobadasCount: aprobadasPlan.length,
-        materiasFaltantes,
-        totalCreditos,
-        progresoPorNivel,
-        metasStats
+        promedio, totalMaterias, aprobadasCount: aprobadasPlan.length,
+        materiasFaltantes, totalCreditos, progresoPorNivel, metasStats
     };
   }, [materias, electivas, configMetas]);
 
@@ -96,10 +84,12 @@ const DashboardPage = ({ userData }) => {
           <Button variant="light" startContent={<Coins size={20}/>} className="justify-start text-default-500 hover:text-foreground" onPress={() => navigate("/electivas")}>
             Electivas
           </Button>
+          <Button variant="light" startContent={<CheckSquare size={20}/>} className="justify-start text-default-500 hover:text-foreground" onPress={() => navigate("/tareas")}>
+            Tareas
+          </Button>
         </nav>
 
         <div className="border-t border-divider pt-4">
-            {/* AQUÍ MOSTRAMOS LA CARRERA EN EL PERFIL */}
             <User   
                 name={user?.displayName?.split(" ")[0] || "Estudiante"}
                 description={userData?.carrera || "Estudiante"} 
@@ -117,13 +107,12 @@ const DashboardPage = ({ userData }) => {
       <main className="flex-1 p-4 md:p-8 overflow-y-auto">
         <header className="mb-8">
             <h1 className="text-3xl font-bold">Hola, {user?.displayName?.split(' ')[0]} 👋</h1>
-            {/* AQUÍ MOSTRAMOS LA CARRERA EN EL TÍTULO */}
             <p className="text-default-500">
                 Resumen de <strong>{userData?.carrera || "tu carrera"}</strong> al día de hoy.
             </p>
         </header>
         
-        {/* KPI CARDS (Métricas Principales) */}
+        {/* KPI CARDS */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             <Card className="bg-gradient-to-br from-blue-600 to-blue-900 border-none shadow-xl shadow-blue-500/20">
                 <CardBody className="p-6">
@@ -170,15 +159,38 @@ const DashboardPage = ({ userData }) => {
             </Card>
         </div>
 
-        {/* SECCIÓN DE METAS Y PROGRESO */}
+        {/* ACCESO RÁPIDO A CORRELATIVAS */}
+        <div className="mb-6">
+            <Card className="bg-gradient-to-r from-gray-900 to-gray-800 border border-white/10 text-white">
+                <CardBody className="flex flex-row items-center justify-between p-6">
+                    <div>
+                        <h3 className="text-xl font-bold flex items-center gap-2">
+                            <Network className="text-blue-400"/> ¿Qué puedo cursar ahora?
+                        </h3>
+                        <p className="text-gray-400 text-sm mt-1">
+                            Consulta el sistema inteligente de correlatividades para ver tus próximas materias.
+                        </p>
+                    </div>
+                    <Button 
+                        onPress={() => navigate("/correlativas")} 
+                        className="bg-white text-black font-bold shadow-lg"
+                        endContent={<ChevronRight/>}
+                    >
+                        Ver Disponibilidad
+                    </Button>
+                </CardBody>
+            </Card>
+        </div>
+
+        {/* GRID DE ESTADÍSTICAS (Volvemos a 2 columnas para más limpieza) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             
-            {/* COLUMNA 1: Metas de Títulos (Créditos) */}
+            {/* Metas de Títulos */}
             <Card className="p-2 h-full">
                 <CardBody>
                     <div className="flex justify-between items-center mb-6">
                         <h3 className="text-lg font-bold flex items-center gap-2">
-                            <GraduationCap size={20} className="text-primary"/> Metas de Electivas
+                            <GraduationCap size={20} className="text-primary"/> Metas de Títulos
                         </h3>
                         <Button size="sm" variant="light" color="primary" onPress={() => navigate("/electivas")}>Ver detalles</Button>
                     </div>
@@ -217,7 +229,7 @@ const DashboardPage = ({ userData }) => {
                 </CardBody>
             </Card>
 
-            {/* COLUMNA 2: Avance por Año (Plan Obligatorio) */}
+            {/* Avance por Año */}
             <Card className="p-2 h-full">
                 <CardBody>
                     <div className="flex justify-between items-center mb-6">
@@ -259,7 +271,7 @@ const DashboardPage = ({ userData }) => {
                     <div className="bg-default-50 rounded-lg p-3 flex gap-3 items-center">
                         <div className="bg-primary/10 p-2 rounded-full text-primary">💡</div>
                         <p className="text-xs text-default-500">
-                            <strong>Tip:</strong> Para obtener tu título intermedio, asegúrate de completar al 100% los años correspondientes y cumplir la meta de créditos electivos.
+                            <strong>Tip:</strong> Para obtener tu título intermedio, asegúrate de completar al 100% los años correspondientes.
                         </p>
                     </div>
                 </CardBody>
