@@ -287,7 +287,7 @@ const ConfigPage = () => {
                 <h3 className="text-xl font-bold flex items-center gap-2">🤝 Apoya el Proyecto</h3>
                 <p className="text-white/90 text-sm mt-1">Invítame un café transfiriendo a mi alias.</p>
                 <div className="mt-3 bg-white/20 p-2 rounded-lg inline-block">
-                    <span className="font-mono font-bold tracking-wide">Bruno.Giraudo.mp</span>
+                    <span className="font-mono font-bold tracking-wide">Bruno.Giraudo.s</span>
                 </div>
             </div>
             <Button 
