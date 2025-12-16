@@ -1,26 +1,36 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { 
-  Card, CardBody, Button, Switch, Input, Divider, Avatar, Snippet 
+  Card, CardBody, Button, Switch, Input, Divider, Avatar 
 } from "@nextui-org/react";
 import { 
-  Moon, Sun, Download, Trash2, Save, UserCircle, AlertTriangle, Copy, Check 
+  Moon, Sun, Download, Upload, Trash2, Save, UserCircle, 
+  AlertTriangle, Copy, Check, Smartphone, CheckCircle 
 } from "lucide-react";
 import useUserStore from "../../stores/useUserStore";
-import { doc, getDoc, updateDoc, collection, getDocs } from "firebase/firestore";
+import { doc, getDoc, updateDoc, collection, getDocs, writeBatch } from "firebase/firestore";
 import { db } from "../../config/firebase";
+import { usePWA } from "../../hooks/usePWA";
 
 const ConfigPage = () => {
   const { user } = useUserStore();
+  
+  // Usamos el hook actualizado con 'isInstalled'
+  const { isInstallable, isInstalled, installApp } = usePWA();
+  
   const [loading, setLoading] = useState(false);
   const [carrera, setCarrera] = useState("");
   
-  // Estados para Tema y Donación
+  // Estados visuales
   const [isDark, setIsDark] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
 
-  // 1. CARGAR DATOS Y TEMA AL INICIO
+  // Referencia para importar archivos
+  const fileInputRef = useRef(null);
+
+  // 1. CARGA INICIAL
   useEffect(() => {
-    // Cargar Perfil
+    // Perfil
     const fetchProfile = async () => {
       if (user) {
         const docRef = doc(db, "usuarios", user.uid);
@@ -32,7 +42,7 @@ const ConfigPage = () => {
     };
     fetchProfile();
 
-    // Cargar Tema Guardado
+    // Tema (Dark Mode)
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "dark") {
         setIsDark(true);
@@ -41,9 +51,13 @@ const ConfigPage = () => {
         setIsDark(false);
         document.documentElement.classList.remove("dark");
     }
+
+    // Detectar iOS (iPhone/iPad)
+    const isDeviceIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    setIsIOS(isDeviceIOS);
   }, [user]);
 
-  // 2. CAMBIAR TEMA (LÓGICA REAL)
+  // 2. CAMBIAR TEMA
   const handleThemeChange = (isSelected) => {
     setIsDark(isSelected);
     if (isSelected) {
@@ -59,9 +73,7 @@ const ConfigPage = () => {
   const handleSaveProfile = async () => {
     setLoading(true);
     try {
-      const docRef = doc(db, "usuarios", user.uid);
-      await updateDoc(docRef, { carrera });
-      // Usamos un alert simple o podrías poner un toast si tienes
+      await updateDoc(doc(db, "usuarios", user.uid), { carrera });
       alert("Perfil actualizado correctamente");
     } catch (error) {
       console.error(error);
@@ -70,19 +82,20 @@ const ConfigPage = () => {
     setLoading(false);
   };
 
-  // 4. EXPORTAR DATOS
+  // 4. EXPORTAR DATOS (BACKUP)
   const handleExportData = async () => {
     setLoading(true);
     try {
         const materiasRef = collection(db, "usuarios", user.uid, "materias");
         const materiasSnap = await getDocs(materiasRef);
-        const materias = materiasSnap.docs.map(d => d.data());
+        const materias = materiasSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
         const horariosRef = collection(db, "usuarios", user.uid, "horarios");
         const horariosSnap = await getDocs(horariosRef);
-        const horarios = horariosSnap.docs.map(d => d.data());
+        const horarios = horariosSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
         const data = {
+            version: 1,
             perfil: { nombre: user.displayName, carrera },
             materias,
             horarios,
@@ -103,18 +116,102 @@ const ConfigPage = () => {
     setLoading(false);
   };
 
-  // 5. COPIAR ALIAS MP
+  // 5. IMPORTAR DATOS (RESTAURAR)
+  const handleImportClick = () => {
+    fileInputRef.current.click();
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+        try {
+            setLoading(true);
+            const data = JSON.parse(event.target.result);
+            
+            if (!data.materias || !data.horarios) {
+                alert("El archivo no tiene el formato correcto.");
+                setLoading(false);
+                return;
+            }
+
+            if (!confirm("⚠️ ¡ATENCIÓN! \n\nAl importar, se sobrescribirán tus datos actuales. ¿Seguro?")) {
+                setLoading(false);
+                return;
+            }
+
+            const batch = writeBatch(db);
+
+            // Restaurar Materias
+            data.materias.forEach(m => {
+                const docRef = doc(db, "usuarios", user.uid, "materias", m.id || doc(collection(db, "temp")).id);
+                batch.set(docRef, m);
+            });
+
+            // Restaurar Horarios
+            data.horarios.forEach(h => {
+                const docRef = doc(db, "usuarios", user.uid, "horarios", h.id || doc(collection(db, "temp")).id);
+                batch.set(docRef, h);
+            });
+
+            // Restaurar Carrera
+            if (data.perfil?.carrera) {
+                const userRef = doc(db, "usuarios", user.uid);
+                batch.update(userRef, { carrera: data.perfil.carrera });
+            }
+
+            await batch.commit();
+            alert("¡Datos restaurados! Recargando...");
+            window.location.reload();
+
+        } catch (error) {
+            alert("Error al procesar el archivo.");
+        } finally {
+            setLoading(false);
+            e.target.value = null; 
+        }
+    };
+    reader.readAsText(file);
+  };
+
+  // 6. COPIAR ALIAS
   const handleCopyAlias = () => {
     navigator.clipboard.writeText("Bruno.Giraudo.mp");
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // 7. RESETEAR CUENTA
+  const handleResetAccount = async () => {
+    if(!confirm("¿ESTÁS SEGURO? Se borrarán TODAS tus materias y horarios.")) return;
+    
+    setLoading(true);
+    try {
+        const matRef = collection(db, "usuarios", user.uid, "materias");
+        const matSnap = await getDocs(matRef);
+        const batch = writeBatch(db);
+        matSnap.docs.forEach(d => batch.delete(d.ref));
+
+        const horRef = collection(db, "usuarios", user.uid, "horarios");
+        const horSnap = await getDocs(horRef);
+        horSnap.docs.forEach(d => batch.delete(d.ref));
+        
+        await batch.commit();
+        alert("Cuenta reseteada.");
+        window.location.reload();
+    } catch (e) {
+        alert("Error al borrar.");
+    }
+    setLoading(false);
+  };
+
   return (
     <div className="p-4 md:p-8 max-w-3xl mx-auto space-y-6 pb-20">
       <h1 className="text-3xl font-bold mb-6">Configuración</h1>
 
-      {/* SECCIÓN 1: PERFIL */}
+      {/* 1. PERFIL */}
       <Card>
         <CardBody className="p-6 gap-4">
             <h3 className="text-lg font-bold flex items-center gap-2">
@@ -127,15 +224,10 @@ const ConfigPage = () => {
                     <p className="text-default-500 text-sm">{user?.email}</p>
                 </div>
             </div>
-            
             <Input 
-                label="Carrera / Título" 
-                placeholder="Ej: Ingeniería en Sistemas" 
-                value={carrera} 
-                onChange={(e) => setCarrera(e.target.value)}
-                variant="bordered"
+                label="Carrera / Título" placeholder="Ej: Ingeniería en Sistemas" 
+                value={carrera} onChange={(e) => setCarrera(e.target.value)} variant="bordered"
             />
-            
             <div className="flex justify-end">
                 <Button color="primary" onPress={handleSaveProfile} isLoading={loading} startContent={<Save size={18}/>}>
                     Guardar Cambios
@@ -144,7 +236,7 @@ const ConfigPage = () => {
         </CardBody>
       </Card>
 
-      {/* SECCIÓN 2: APARIENCIA */}
+      {/* 2. APARIENCIA */}
       <Card>
         <CardBody className="p-6 flex flex-row justify-between items-center">
             <div>
@@ -152,35 +244,55 @@ const ConfigPage = () => {
                 <p className="text-default-500 text-sm">Cambiar entre modo claro y oscuro.</p>
             </div>
             <Switch 
-                size="lg" 
-                color="secondary"
-                startContent={<Sun size={14}/>} 
-                endContent={<Moon size={14}/>}
-                isSelected={isDark}
-                onValueChange={handleThemeChange}
+                size="lg" color="secondary"
+                startContent={<Sun size={14}/>} endContent={<Moon size={14}/>}
+                isSelected={isDark} onValueChange={handleThemeChange}
             >
                 {isDark ? "Modo Oscuro" : "Modo Claro"}
             </Switch>
         </CardBody>
       </Card>
 
-      {/* SECCIÓN 3: MERCADO PAGO */}
+      {/* 3. INSTALAR APP (PWA) */}
+      <Card className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white border-none">
+        <CardBody className="p-6">
+            <div className="flex justify-between items-center gap-4">
+                <div>
+                    <h3 className="text-xl font-bold flex items-center gap-2"><Smartphone /> Instalar App</h3>
+                    <p className="text-white/90 text-sm mt-1">Accede más rápido desde tu inicio.</p>
+                </div>
+                
+                {/* LÓGICA DE BOTONES PWA */}
+                {isInstalled ? (
+                    <div className="bg-white/20 p-2 rounded-lg flex items-center gap-2">
+                        <CheckCircle size={16}/> <span className="font-bold text-sm">App Instalada</span>
+                    </div>
+                ) : isInstallable ? (
+                    <Button className="bg-white text-indigo-600 font-bold shadow-lg" onPress={installApp}>
+                        Instalar
+                    </Button>
+                ) : isIOS ? (
+                    <div className="bg-white/20 p-2 rounded-lg text-xs font-medium text-center max-w-[150px]">
+                        Toca <strong>Compartir</strong> y <strong>"Agregar a Inicio"</strong>
+                    </div>
+                ) : null}
+            </div>
+        </CardBody>
+      </Card>
+
+      {/* 4. DONACIÓN */}
       <Card className="bg-gradient-to-r from-[#009EE3] to-[#0072bb] text-white border-none shadow-lg shadow-blue-500/20">
         <CardBody className="p-6 flex flex-col md:flex-row items-center justify-between gap-4">
             <div>
                 <h3 className="text-xl font-bold flex items-center gap-2">🤝 Apoya el Proyecto</h3>
-                <p className="text-white/90 text-sm mt-1">
-                    ¿Te sirve la app? Puedes invitarme un café transfiriendo a mi alias.
-                </p>
+                <p className="text-white/90 text-sm mt-1">Invítame un café transfiriendo a mi alias.</p>
                 <div className="mt-3 bg-white/20 p-2 rounded-lg inline-block">
                     <span className="font-mono font-bold tracking-wide">Bruno.Giraudo.mp</span>
                 </div>
             </div>
-            
             <Button 
                 className="bg-white text-[#009EE3] font-bold shadow-lg" 
-                size="lg"
-                onPress={handleCopyAlias}
+                size="lg" onPress={handleCopyAlias}
                 startContent={copied ? <Check size={20}/> : <Copy size={20}/>}
             >
                 {copied ? "¡Copiado!" : "Copiar Alias"}
@@ -188,36 +300,35 @@ const ConfigPage = () => {
         </CardBody>
       </Card>
 
-      {/* SECCIÓN 4: DATOS */}
+      {/* 5. GESTIÓN DE DATOS */}
       <Card>
         <CardBody className="p-6 gap-4">
             <h3 className="text-lg font-bold flex items-center gap-2"><Download size={20}/> Gestión de Datos</h3>
-            <p className="text-default-500 text-sm">
-                Descarga una copia de seguridad de toda tu información académica en formato JSON.
-            </p>
-            <div>
+            <p className="text-default-500 text-sm">Copia de seguridad y restauración.</p>
+            
+            <div className="flex gap-4">
                 <Button variant="flat" color="success" onPress={handleExportData} startContent={<Download size={18}/>}>
-                    Descargar mis datos
+                    Exportar Copia
                 </Button>
+                <Button variant="flat" color="primary" onPress={handleImportClick} startContent={<Upload size={18}/>}>
+                    Restaurar Copia
+                </Button>
+                <input type="file" ref={fileInputRef} style={{display: 'none'}} accept=".json" onChange={handleFileChange} />
             </div>
             
             <Divider className="my-2"/>
             
             <div className="bg-danger-50 p-4 rounded-xl border border-danger-200">
                 <h4 className="text-danger font-bold flex items-center gap-2 text-sm"><AlertTriangle size={16}/> Zona de Peligro</h4>
-                <p className="text-danger-600 text-xs mb-3">
-                    Esta acción borrará todas tus materias, horarios y notas. No se puede deshacer.
-                </p>
-                <Button size="sm" color="danger" variant="ghost" startContent={<Trash2 size={16}/>}>
+                <p className="text-danger-600 text-xs mb-3">Borrar todo permanentemente.</p>
+                <Button size="sm" color="danger" variant="ghost" onPress={handleResetAccount} startContent={<Trash2 size={16}/>}>
                     Resetear Cuenta
                 </Button>
             </div>
         </CardBody>
       </Card>
-
-      <p className="text-center text-xs text-default-400 pt-4">
-        Gestor Universitario v1.0 • Bruno Giraudo
-      </p>
+      
+      <p className="text-center text-xs text-default-400 pt-4">Gestor Universitario v2.0 • Bruno Giraudo</p>
     </div>
   );
 };
