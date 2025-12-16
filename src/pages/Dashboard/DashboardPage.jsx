@@ -262,7 +262,7 @@ const DashboardPage = ({ userData }) => {
                 <CardBody>
                     <div className="flex justify-between items-center mb-6">
                         <h3 className="text-lg font-bold flex items-center gap-2">
-                            <GraduationCap size={20} className="text-secondary"/> Metas de Títulos
+                            <GraduationCap size={20} className="text-secondary"/> Metas de Electivas
                         </h3>
                         <Button size="sm" variant="light" onPress={() => navigate("/electivas")}>Detalles</Button>
                     </div>

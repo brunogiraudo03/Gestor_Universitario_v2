@@ -1,15 +1,15 @@
 import { Button, User, Spacer } from "@nextui-org/react";
 import { 
   LogOut, LayoutDashboard, BookOpen, Trophy, 
-  Network, CalendarClock, CalendarRange, Timer, School, Settings 
+  Network, CalendarClock, CalendarRange, Timer, School, Settings , Activity
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { auth } from "../config/firebase";
 import useUserStore from "../stores/useUserStore";
 
-const Sidebar = ({ onClose }) => { // Recibe onClose para cerrar el menú en móvil al hacer click
+const Sidebar = ({ onClose }) => { 
   const navigate = useNavigate();
-  const location = useLocation(); // Para saber en qué página estamos
+  const location = useLocation(); 
   const { user, clearUser } = useUserStore();
 
   const handleLogout = () => {
@@ -31,11 +31,14 @@ const Sidebar = ({ onClose }) => { // Recibe onClose para cerrar el menú en mó
   return (
     <aside className="h-full flex flex-col bg-background border-r border-divider p-6 w-64">
       {/* LOGO */}
-      <div className="flex items-center gap-3 px-2 mb-8">
-          <div className="bg-gradient-to-tr from-primary to-secondary p-2.5 rounded-xl shadow-lg shadow-primary/20">
-              <School className="text-white" size={26} />
+      <div className="flex justify-center px-2 mb-8 w-full">
+          <div className="bg-gradient-to-tr from-primary to-secondary p-2 rounded-xl shadow-lg shadow-primary/20 flex items-center justify-center shrink-0">
+              <img 
+                  src="/negro.png" 
+                  alt="Uplanner Logo" 
+                  className="w-[110px] h-[110px] object-contain mx-auto block" 
+              />
           </div>
-          <span className="text-lg font-bold tracking-tight leading-tight">Uplanner</span>
       </div>
       
       {/* MENÚ */}

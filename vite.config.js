@@ -12,8 +12,8 @@ export default defineConfig({
         name: 'Uplanner',
         short_name: 'Uplanner',
         description: 'Organiza tu carrera universitaria',
-        theme_color: '#ffffff',
-        background_color: '#ffffff',
+        theme_color: '#000000ff',
+        background_color: '#000000ff',
         display: 'standalone',
         orientation: 'portrait',
         icons: [
