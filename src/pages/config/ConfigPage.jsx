@@ -178,7 +178,7 @@ const ConfigPage = () => {
 
   // 6. COPIAR ALIAS
   const handleCopyAlias = () => {
-    navigator.clipboard.writeText("Bruno.Giraudo.mp");
+    navigator.clipboard.writeText("bruno.giraudo.s");
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
