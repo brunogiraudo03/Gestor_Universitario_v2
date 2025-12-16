@@ -12,7 +12,9 @@ import DashboardPage from "./pages/Dashboard/DashboardPage";
 import PlanEstudioPage from "./pages/PlanEstudio/PlanEstudioPage";
 import ElectivasPage from "./pages/Electivas/ElectivasPage"; 
 import CorrelativasPage from "./pages/Correlativas/CorrelativasPage";
-import TodoPage from "./pages/Todo/TodoPage"; // <--- NUEVA IMPORTACIÓN
+import AgendaPage from "./pages/Agenda/AgendaPage";
+import PomodoroPage from "./pages/Pomodoro/PomodoroPage";
+import HorariosPage from "./pages/Horarios/HorariosPage";
 
 function App() {
   const { user, setUser, loading: storeLoading } = useUserStore();
@@ -69,7 +71,9 @@ function App() {
           <Route path="/plan" element={user ? <PlanEstudioPage /> : <Navigate to="/login" />} />
           <Route path="/electivas" element={user ? <ElectivasPage /> : <Navigate to="/login" />} />
           <Route path="/correlativas" element={user ? <CorrelativasPage /> : <Navigate to="/login" />} />
-          <Route path="/tareas" element={user ? <TodoPage /> : <Navigate to="/login" />} /> {/* <--- NUEVA RUTA */}
+          <Route path="/agenda" element={user ? <AgendaPage /> : <Navigate to="/login" />} />
+          <Route path="/pomodoro" element={user ? <PomodoroPage /> : <Navigate to="/login" />} />
+          <Route path="/horarios" element={user ? <HorariosPage /> : <Navigate to="/login" />} />
         </>
       )}
     </Routes>

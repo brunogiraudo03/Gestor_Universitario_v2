@@ -17,27 +17,46 @@ const ElectivasPage = () => {
   const [materiaAEditar, setMateriaAEditar] = useState(null);
 
   useEffect(() => {
-    // Si terminó de cargar y no hay metas configuradas, abre el modal
     if (!loading && (!configMetas.configurado || !configMetas.metas || configMetas.metas.length === 0)) {
         setConfigOpen(true);
     }
   }, [loading, configMetas]);
 
-  // CÁLCULO DINÁMICO DE PROGRESO
+  // CÁLCULO DINÁMICO DE PROGRESO (CORREGIDO)
   const stats = useMemo(() => {
+    // Filtramos solo las aprobadas
     const aprobadas = electivas.filter(e => e.estado === "Aprobada");
-    const totalCreditos = aprobadas.reduce((acc, curr) => acc + (curr.creditos || 0), 0);
     
-    // Aseguramos que metas sea un array antes de mapear
+    // Total global (suma bruta de todo lo aprobado, solo informativo)
+    const totalCreditosGlobal = aprobadas.reduce((acc, curr) => acc + (curr.creditos || 0), 0);
+    
     const metasSafe = Array.isArray(configMetas.metas) ? configMetas.metas : [];
 
     const metasStats = metasSafe.map(meta => {
         const objetivo = meta.creditos || 1;
-        const porcentaje = Math.min((totalCreditos / objetivo) * 100, 100);
-        return { ...meta, porcentaje };
+        
+        // CÁLCULO ESPECÍFICO POR META
+        // Sumamos los créditos SOLO si la materia está asignada a esta meta
+        const creditosAcumuladosMeta = aprobadas.reduce((acc, curr) => {
+            // Si la materia tiene el campo metasIds, verificamos si incluye el ID de esta meta
+            // Si no tiene metasIds (datos viejos), asumimos que cuenta para todo (comportamiento por defecto)
+            const aplicaAMeta = curr.metasIds 
+                ? curr.metasIds.includes(String(meta.id)) 
+                : true; 
+            
+            return aplicaAMeta ? acc + (curr.creditos || 0) : acc;
+        }, 0);
+
+        const porcentaje = Math.min((creditosAcumuladosMeta / objetivo) * 100, 100);
+        
+        return { 
+            ...meta, 
+            creditosAcumulados: creditosAcumuladosMeta, // Usamos este valor real para la barra
+            porcentaje 
+        };
     });
 
-    return { totalCreditos, metasStats };
+    return { totalCreditosGlobal, metasStats };
   }, [electivas, configMetas]);
 
   const handleGuardar = async (datos) => {
@@ -79,7 +98,7 @@ const ElectivasPage = () => {
             <CardBody className="py-4 px-5">
                 <div className="flex items-center gap-2 mb-4">
                     <Coins className="text-warning" size={20}/>
-                    <span className="text-xl font-bold">{stats.totalCreditos} Créditos Obtenidos</span>
+                    <span className="text-xl font-bold">{stats.totalCreditosGlobal} Créditos Totales</span>
                 </div>
 
                 <div className="space-y-4 max-h-[150px] overflow-y-auto pr-1">
@@ -88,7 +107,8 @@ const ElectivasPage = () => {
                             <div className="flex justify-between text-small mb-1">
                                 <span className="text-default-500 font-medium">{meta.nombre}</span>
                                 <span className={meta.porcentaje === 100 ? "font-bold text-success" : "font-bold text-primary"}>
-                                    {stats.totalCreditos} / {meta.creditos}
+                                    {/* AQUI MOSTRAMOS LO REAL ACUMULADO PARA ESTA META */}
+                                    {meta.creditosAcumulados} / {meta.creditos}
                                 </span>
                             </div>
                             <Progress 
@@ -116,7 +136,12 @@ const ElectivasPage = () => {
       />
 
       <ElectivasForm 
-        isOpen={isOpen} onClose={onOpenChange} onSubmit={handleGuardar} initialData={materiaAEditar}
+        isOpen={isOpen} 
+        onClose={onOpenChange} 
+        onSubmit={handleGuardar} 
+        initialData={materiaAEditar}
+        // Pasamos las metas disponibles al formulario
+        availableMetas={configMetas.metas || []} 
       />
 
       <ElectivasConfigModal 

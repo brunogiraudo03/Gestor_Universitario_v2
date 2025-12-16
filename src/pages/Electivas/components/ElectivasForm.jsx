@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { 
   Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, 
-  Button, Input, Select, SelectItem, Divider 
+  Button, Input, Select, SelectItem, Divider, CheckboxGroup, Checkbox
 } from "@nextui-org/react";
-import { Save } from "lucide-react";
+import { Save, Target } from "lucide-react";
 
 const ESTADOS = [
   {label: "Aprobada", value: "Aprobada", color: "success"},
@@ -12,14 +12,15 @@ const ESTADOS = [
   {label: "Desaprobada", value: "Desaprobada", color: "danger"},
 ];
 
-const ANIOS_OPCIONES = [3, 4, 5, 6]; // Generalmente electivas arrancan en 3ro, pero puedes poner [1,2,3...]
+const ANIOS_OPCIONES = [3, 4, 5, 6];
 
-const ElectivasForm = ({ isOpen, onClose, onSubmit, initialData }) => {
+const ElectivasForm = ({ isOpen, onClose, onSubmit, initialData, availableMetas = [] }) => {
   const defaultValues = {
     nombre: "", nivel: "3", modalidad: "1C",
-    creditos: "", // CAMPO CLAVE
+    creditos: "", 
     correlativasRegular: "", correlativasAprobada: "",
-    estado: "Pendiente", nota: ""
+    estado: "Pendiente", nota: "",
+    metasIds: [] // Array para guardar los IDs de las metas a las que aplica
   };
 
   const [formData, setFormData] = useState(defaultValues);
@@ -33,19 +34,25 @@ const ElectivasForm = ({ isOpen, onClose, onSubmit, initialData }) => {
             creditos: String(initialData.creditos || ""),
             nota: String(initialData.nota || ""),
             correlativasRegular: initialData.correlativasRegular || "",
-            correlativasAprobada: initialData.correlativasAprobada || ""
+            correlativasAprobada: initialData.correlativasAprobada || "",
+            // Aseguramos que sea array y convertimos a strings para los checkboxes
+            metasIds: (initialData.metasIds || []).map(String) 
         });
       } else {
-        setFormData(defaultValues);
+        // Si es nueva, por defecto seleccionamos TODAS las metas (más cómodo)
+        // o déjalo vacío si prefieres que el usuario elija manualmente.
+        // Aquí lo dejo seleccionando todas para ahorrar clicks:
+        const allMetasIds = availableMetas.map(m => String(m.id));
+        setFormData({ ...defaultValues, metasIds: allMetasIds });
       }
     }
-  }, [isOpen, initialData?.id]); 
+  }, [isOpen, initialData, availableMetas]); 
 
   const handleSubmit = () => {
-    if (!formData.nombre || !formData.creditos) return; // Validación básica
+    if (!formData.nombre || !formData.creditos) return; 
 
     const nivelInt = parseInt(formData.nivel);
-    const creditosInt = parseInt(formData.creditos); // Convertimos créditos a número
+    const creditosInt = parseInt(formData.creditos); 
     const notaFloat = parseFloat(formData.nota);
 
     const cRegular = !formData.correlativasRegular || formData.correlativasRegular.trim() === "" ? "-" : formData.correlativasRegular;
@@ -57,7 +64,8 @@ const ElectivasForm = ({ isOpen, onClose, onSubmit, initialData }) => {
       creditos: isNaN(creditosInt) ? 0 : creditosInt,
       nota: isNaN(notaFloat) ? "" : notaFloat,
       correlativasRegular: cRegular,
-      correlativasAprobada: cAprobada
+      correlativasAprobada: cAprobada,
+      metasIds: formData.metasIds // Enviamos los IDs seleccionados
     };
 
     onSubmit(payload);
@@ -105,7 +113,7 @@ const ElectivasForm = ({ isOpen, onClose, onSubmit, initialData }) => {
                 </div>
               </div>
 
-              {/* FILA 2: Detalles (Créditos es el protagonista) */}
+              {/* FILA 2: Detalles */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <Input 
                   label="Créditos" type="number" variant="bordered" placeholder="Ej: 3"
@@ -142,6 +150,33 @@ const ElectivasForm = ({ isOpen, onClose, onSubmit, initialData }) => {
                   value={formData.nota}
                   onChange={(e) => setFormData({...formData, nota: e.target.value})}
                 />
+              </div>
+
+              <Divider className="my-2 bg-white/10"/>
+
+              {/* SECCIÓN DE METAS (NUEVO) */}
+              <div className="bg-white/5 p-4 rounded-xl border border-white/10">
+                <div className="flex gap-2 items-center mb-2 text-default-500 text-sm font-bold uppercase">
+                    <Target size={16} />
+                    <span>Impacto en Créditos</span>
+                </div>
+                <CheckboxGroup
+                    value={formData.metasIds}
+                    onValueChange={(val) => setFormData({...formData, metasIds: val})}
+                    orientation="horizontal"
+                    color="secondary"
+                    classNames={{wrapper: "gap-4"}}
+                >
+                    {availableMetas.length === 0 ? (
+                        <p className="text-xs text-default-400 italic">No hay metas configuradas. Ve a "Configurar Metas" primero.</p>
+                    ) : (
+                        availableMetas.map((meta) => (
+                            <Checkbox key={meta.id} value={String(meta.id)}>
+                                {meta.nombre}
+                            </Checkbox>
+                        ))
+                    )}
+                </CheckboxGroup>
               </div>
 
               <Divider className="my-2 bg-white/10"/>

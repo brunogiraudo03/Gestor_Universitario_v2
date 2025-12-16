@@ -13,9 +13,15 @@ export const useTodos = () => {
   const todosRef = user ? collection(db, "usuarios", user.uid, "todos") : null;
 
   useEffect(() => {
-    if (!user || !todosRef) return;
-
-    const q = query(todosRef, orderBy("createdAt", "desc"));
+    if (!user || !todosRef) {
+        setTodos([]);
+        setLoading(false);
+        return;
+    }
+    
+    // Traemos todo ordenado por fecha
+    const q = query(todosRef, orderBy("fechaEntrega", "asc"));
+    
     const unsubscribe = onSnapshot(q, (snapshot) => {
       setTodos(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
       setLoading(false);
@@ -23,24 +29,34 @@ export const useTodos = () => {
     return () => unsubscribe();
   }, [user]);
 
-  const agregarTodo = async (texto) => {
-    if (!texto.trim()) return;
+  // AHORA ACEPTAMOS 'TIPO' y 'HORA'
+  const agregarEvento = async (datos) => {
+    /* datos = { 
+        texto: "Parcial Física", 
+        fechaEntrega: "2023-10-25", 
+        tipo: "parcial" | "entrega" | "tarea" | "otro",
+        hora: "14:00"
+      } 
+    */
+    if (!datos.texto.trim()) return;
     await addDoc(todosRef, { 
-        texto, 
+        ...datos,
         completado: false, 
-        createdAt: new Date() 
+        createdAt: new Date().toISOString() 
     });
   };
 
   const toggleTodo = async (todo) => {
+    if (!todosRef) return;
     await updateDoc(doc(db, "usuarios", user.uid, "todos", todo.id), {
         completado: !todo.completado
     });
   };
 
   const borrarTodo = async (id) => {
+    if (!todosRef) return;
     await deleteDoc(doc(db, "usuarios", user.uid, "todos", id));
   };
 
-  return { todos, loading, agregarTodo, toggleTodo, borrarTodo };
+  return { todos, loading, agregarEvento, toggleTodo, borrarTodo };
 };

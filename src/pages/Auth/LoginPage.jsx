@@ -1,24 +1,33 @@
+import { useState } from "react";
 import { Button, Card, CardBody, CardHeader } from "@nextui-org/react";
 import { signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "../../config/firebase";
 import { useNavigate } from "react-router-dom";
-import { Github, Play } from "lucide-react"; // Usamos iconos de ejemplo
+import { Github, Play, AlertCircle } from "lucide-react"; 
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const handleGoogleLogin = async () => {
+    setError(null);
+    setLoading(true);
+
     try {
       await signInWithPopup(auth, googleProvider);
-      navigate("/"); // Redirige al inicio tras loguearse
-    } catch (error) {
-      console.error("Error al iniciar sesión:", error);
+      navigate("/"); 
+    } catch (err) {
+      console.error("Error al iniciar sesión:", err);
+      setError("No se pudo iniciar sesión. Inténtalo nuevamente.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-black">
-      {/* Fondo decorativo (opcional) */}
+      {/* Fondo decorativo */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
         <div className="absolute top-[-10%] right-[10%] w-[500px] h-[500px] bg-purple-600/30 rounded-full blur-[120px]" />
         <div className="absolute bottom-[-10%] left-[10%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px]" />
@@ -29,19 +38,28 @@ const LoginPage = () => {
           <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">
             Bienvenido
           </h1>
-          <p className="text-sm text-default-500">Gestor Universitario 2.0</p>
+          {/* TEXTO CORREGIDO: Sin el "2.0" */}
+          <p className="text-sm text-default-500">Gestor Universitario</p>
         </CardHeader>
         
         <CardBody className="gap-4 py-8 px-8">
           <Button 
-            onPress={handleGoogleLogin} // Aquí usamos onPress como pide NextUI
+            onPress={handleGoogleLogin} 
             color="primary" 
             variant="shadow"
             className="w-full font-semibold"
-            startContent={<Play size={18} className="rotate-0 fill-current" />} 
+            isLoading={loading}
+            startContent={!loading && <Play size={18} className="rotate-0 fill-current" />} 
           >
-            Continuar con Google
+            {loading ? "Conectando..." : "Continuar con Google"}
           </Button>
+
+          {error && (
+            <div className="flex items-center gap-2 justify-center text-danger text-xs bg-danger/10 p-2 rounded-lg animate-appearance-in">
+                <AlertCircle size={14} />
+                <span>{error}</span>
+            </div>
+          )}
 
           <div className="flex items-center gap-2 my-2">
             <div className="h-[1px] bg-default-200 w-full"></div>
