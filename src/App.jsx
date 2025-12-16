@@ -6,21 +6,25 @@ import { auth, db } from "./config/firebase";
 import useUserStore from "./stores/useUserStore";
 import { Spinner } from "@nextui-org/react";
 
+// --- TUS COMPONENTES ORIGINALES ---
 import LoginPage from "./pages/Auth/LoginPage";
 import OnboardingPage from "./pages/Auth/OnboardingPage"; 
 import DashboardPage from "./pages/Dashboard/DashboardPage";
-import PlanEstudioPage from "./pages/PlanEstudio/PlanEstudioPage";
+import PlanEstudioPage from "./pages/PlanEstudio/PlanEstudioPage"; // <--- Tu nombre correcto
 import ElectivasPage from "./pages/Electivas/ElectivasPage"; 
 import CorrelativasPage from "./pages/Correlativas/CorrelativasPage";
 import AgendaPage from "./pages/Agenda/AgendaPage";
 import PomodoroPage from "./pages/Pomodoro/PomodoroPage";
 import HorariosPage from "./pages/Horarios/HorariosPage";
+import ConfigPage from "./pages/Config/ConfigPage";
+
+// --- EL NUEVO LAYOUT (Para celular) ---
+import Layout from "./components/Layout"; 
 
 function App() {
-  const { user, setUser, loading: storeLoading } = useUserStore();
+  const { user, setUser } = useUserStore();
   const [appLoading, setAppLoading] = useState(true);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
-  
   const [userData, setUserData] = useState(null); 
 
   useEffect(() => {
@@ -67,13 +71,52 @@ function App() {
         <Route path="*" element={<OnboardingPage onComplete={handleOnboardingComplete} />} />
       ) : (
         <>
-          <Route path="/" element={user ? <DashboardPage userData={userData} /> : <Navigate to="/login" />} />
-          <Route path="/plan" element={user ? <PlanEstudioPage /> : <Navigate to="/login" />} />
-          <Route path="/electivas" element={user ? <ElectivasPage /> : <Navigate to="/login" />} />
-          <Route path="/correlativas" element={user ? <CorrelativasPage /> : <Navigate to="/login" />} />
-          <Route path="/agenda" element={user ? <AgendaPage /> : <Navigate to="/login" />} />
-          <Route path="/pomodoro" element={user ? <PomodoroPage /> : <Navigate to="/login" />} />
-          <Route path="/horarios" element={user ? <HorariosPage /> : <Navigate to="/login" />} />
+          {/* AQUÍ ESTÁ LA MAGIA:
+             Envolvemos tus páginas dentro de <Layout>...</Layout>
+             para que tengan el menú lateral y la versión móvil.
+          */}
+          <Route path="/" element={user ? (
+            <Layout>
+                <DashboardPage userData={userData} />
+            </Layout>
+          ) : <Navigate to="/login" />} />
+
+          <Route path="/plan" element={user ? (
+            <Layout>
+                <PlanEstudioPage />
+            </Layout>
+          ) : <Navigate to="/login" />} />
+
+          <Route path="/electivas" element={user ? (
+            <Layout>
+                <ElectivasPage />
+            </Layout>
+          ) : <Navigate to="/login" />} />
+
+          <Route path="/correlativas" element={user ? (
+            <Layout>
+                <CorrelativasPage />
+            </Layout>
+          ) : <Navigate to="/login" />} />
+
+          <Route path="/agenda" element={user ? (
+            <Layout>
+                <AgendaPage />
+            </Layout>
+          ) : <Navigate to="/login" />} />
+
+          <Route path="/pomodoro" element={user ? (
+            <Layout>
+                <PomodoroPage />
+            </Layout>
+          ) : <Navigate to="/login" />} />
+
+          <Route path="/horarios" element={user ? (
+            <Layout>
+                <HorariosPage />
+            </Layout>
+          ) : <Navigate to="/login" />} />
+          <Route path="/config" element={user ? <Layout><ConfigPage /></Layout> : <Navigate to="/login" />} />
         </>
       )}
     </Routes>

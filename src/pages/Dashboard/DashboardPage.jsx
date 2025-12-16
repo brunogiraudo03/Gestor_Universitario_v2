@@ -1,14 +1,12 @@
 import { useMemo } from "react";
-import { Button, Card, CardBody, User, Spacer, Progress, Divider, Spinner, Chip } from "@nextui-org/react";
+import { Button, Card, CardBody, Progress, Divider, Spinner, Chip } from "@nextui-org/react";
 import { 
-  LogOut, LayoutDashboard, BookOpen, GraduationCap, Trophy, 
-  TrendingUp, ChevronRight, Network, CheckSquare, School, 
-  CalendarClock, CalendarRange, Sun, MapPin, AlertCircle, Timer 
+  Trophy, TrendingUp, ChevronRight, Network, School, 
+  CalendarClock, CalendarRange, Sun, MapPin, AlertCircle, BookOpen, GraduationCap 
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { auth } from "../../config/firebase";
 import useUserStore from "../../stores/useUserStore";
-import { formatDistanceToNow, parseISO, isToday } from "date-fns";
+import { formatDistanceToNow, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 
 // Hooks
@@ -19,18 +17,13 @@ import { useHorarios } from "../../hooks/useHorarios";
 
 const DashboardPage = ({ userData }) => {
   const navigate = useNavigate();
-  const { user, clearUser } = useUserStore();
+  const { user } = useUserStore();
   
   // Traemos TODOS los datos
   const { materias, loading: loadingPlan } = useMaterias();
   const { electivas, configMetas, loading: loadingElectivas } = useElectivas();
   const { todos, loading: loadingAgenda } = useTodos();
   const { horarios, loading: loadingHorarios } = useHorarios();
-
-  const handleLogout = () => {
-    auth.signOut();
-    clearUser();
-  };
 
   // --- LÓGICA ESTADÍSTICAS ---
   const stats = useMemo(() => {
@@ -99,49 +92,17 @@ const DashboardPage = ({ userData }) => {
     return <div className="h-screen flex items-center justify-center"><Spinner size="lg" label="Sincronizando..." color="primary"/></div>;
   }
 
+  // --- RENDERIZADO DEL DASHBOARD ---
   return (
-    <div className="flex min-h-screen bg-background text-foreground">
-      {/* --- SIDEBAR --- */}
-      <aside className="w-64 border-r border-divider p-6 flex flex-col hidden md:flex sticky top-0 h-screen">
-        <div className="flex items-center gap-3 px-2 mb-8">
-            <div className="bg-gradient-to-tr from-primary to-secondary p-2.5 rounded-xl shadow-lg shadow-primary/20">
-                <School className="text-white" size={26} />
-            </div>
-            <span className="text-lg font-bold tracking-tight leading-tight">Gestor<br/>Universitario</span>
-        </div>
-        
-        <nav className="flex flex-col gap-2 flex-1">
-          <Button variant="flat" color="primary" startContent={<LayoutDashboard size={20}/>} className="justify-start font-medium">Dashboard</Button>
-          <Button variant="light" startContent={<BookOpen size={20}/>} className="justify-start text-default-500 hover:text-foreground" onPress={() => navigate("/plan")}>Plan de Estudio</Button>
-          <Button variant="light" startContent={<Trophy size={20}/>} className="justify-start text-default-500 hover:text-foreground" onPress={() => navigate("/electivas")}>Electivas</Button>
-          <Button variant="light" startContent={<Network size={20}/>} className="justify-start text-default-500 hover:text-foreground" onPress={() => navigate("/correlativas")}>Correlativas</Button>
-          <Button variant="light" startContent={<CalendarClock size={20}/>} className="justify-start text-default-500 hover:text-foreground" onPress={() => navigate("/agenda")}>Agenda</Button>
-          <Button variant="light" startContent={<CalendarRange size={20}/>} className="justify-start text-default-500 hover:text-foreground" onPress={() => navigate("/horarios")}>Horarios</Button>
-          <Button variant="light" startContent={<Timer size={20}/>} className="justify-start text-default-500 hover:text-foreground" onPress={() => navigate("/pomodoro")}>Pomodoro</Button>
-        </nav>
-
-        <div className="border-t border-divider pt-4">
-            <User   
-                name={user?.displayName?.split(" ")[0] || "Estudiante"}
-                description={userData?.carrera || "Estudiante"} 
-                avatarProps={{ src: user?.photoURL, size: "sm" }}
-                classNames={{name: "font-bold", description: "text-default-400 text-xs"}}
-            />
-            <Spacer y={2} />
-            <Button onPress={handleLogout} color="danger" variant="light" startContent={<LogOut size={18}/>} fullWidth className="justify-start">Cerrar Sesión</Button>
-        </div>
-      </aside>
-
-      {/* --- CONTENIDO PRINCIPAL --- */}
-      <main className="flex-1 p-4 md:p-8 overflow-y-auto">
-        <header className="mb-8">
+    <div className="p-4 md:p-8 max-w-[1600px] mx-auto">
+        <header className="mb-8 mt-2 md:mt-0">
             <h1 className="text-3xl font-bold">Hola, {user?.displayName?.split(' ')[0]} 👋</h1>
             <p className="text-default-500">
                 Tienes <strong>{stats.proximoEvento ? "pendientes en la agenda" : "todo al día"}</strong>. ¡A darle duro!
             </p>
         </header>
         
-        {/* --- KPI CARDS (TOP ROW) --- */}
+        {/* KPI CARDS */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             
             {/* 1. PROMEDIO */}
@@ -175,8 +136,8 @@ const DashboardPage = ({ userData }) => {
                 </CardBody>
             </Card>
 
-            {/* 3. AGENDA (PRÓXIMO EVENTO) - REEMPLAZA A CRÉDITOS */}
-            <Card className="bg-content1 border border-default-200 shadow-sm" onPress={() => navigate("/agenda")} isPressable>
+            {/* 3. AGENDA (PRÓXIMO EVENTO) */}
+            <Card className="bg-content1 border border-default-200 shadow-sm cursor-pointer" onPress={() => navigate("/agenda")} isPressable>
                 <CardBody className="p-6">
                     <div className="flex justify-between items-start mb-2">
                         <span className="text-default-500 font-medium text-sm">Próximo Vencimiento</span>
@@ -205,15 +166,15 @@ const DashboardPage = ({ userData }) => {
             </Card>
         </div>
 
-        {/* --- MIDDLE ROW (CORRELATIVAS + HORARIO) --- */}
+        {/* MIDDLE ROW (CORRELATIVAS + HORARIO) */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             
             {/* IZQUIERDA: CORRELATIVAS (Ancho 2/3) */}
             <div className="lg:col-span-2">
                 <Card className="bg-gradient-to-r from-gray-900 to-gray-800 border border-white/10 text-white h-full shadow-lg">
-                    <CardBody className="flex flex-row items-center justify-between p-8">
+                    <CardBody className="flex flex-col sm:flex-row items-center justify-between p-8 gap-4 text-center sm:text-left">
                         <div>
-                            <h3 className="text-2xl font-bold flex items-center gap-2 mb-2">
+                            <h3 className="text-2xl font-bold flex items-center justify-center sm:justify-start gap-2 mb-2">
                                 <Network className="text-blue-400"/> ¿Qué curso ahora?
                             </h3>
                             <p className="text-gray-300 text-sm max-w-md">
@@ -293,7 +254,7 @@ const DashboardPage = ({ userData }) => {
             </div>
         </div>
 
-        {/* --- BOTTOM ROW (METAS + PROGRESO) --- */}
+        {/* BOTTOM ROW (METAS + PROGRESO) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             
             {/* 1. METAS DE TÍTULOS (Detalle de créditos) */}
@@ -323,11 +284,6 @@ const DashboardPage = ({ userData }) => {
                                         showValueLabel={true}
                                         className="max-w-full"
                                     />
-                                    <p className="text-xs text-default-400 mt-2">
-                                        {meta.porcentaje === 100 
-                                            ? "¡Requisito completado! 🎓" 
-                                            : `Faltan ${Math.max(0, meta.creditos - meta.creditosAcumulados)} créditos.`}
-                                    </p>
                                 </div>
                             ))
                         ) : (
@@ -383,7 +339,6 @@ const DashboardPage = ({ userData }) => {
             </Card>
 
         </div>
-      </main>
     </div>
   );
 };
