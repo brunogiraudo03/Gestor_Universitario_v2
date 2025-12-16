@@ -1,79 +1,116 @@
 import { useState } from "react";
-import { Button, Input, Card, CardBody, CardHeader } from "@nextui-org/react";
+import { 
+  Card, CardBody, CardHeader, Input, Button, DatePicker, Select, SelectItem 
+} from "@nextui-org/react";
 import { doc, setDoc } from "firebase/firestore";
-import { db, auth } from "../../config/firebase";
-import { useNavigate } from "react-router-dom";
-import { Rocket, GraduationCap } from "lucide-react";
+import { db } from "../../config/firebase";
+import useUserStore from "../../stores/useUserStore";
+import { Rocket, GraduationCap, Calendar, University } from "lucide-react";
+import { parseDate } from "@internationalized/date"; // Utilidad de NextUI para fechas
 
 const OnboardingPage = ({ onComplete }) => {
-  const [carrera, setCarrera] = useState("");
+  const { user } = useUserStore();
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  
+  // Estados del formulario
+  const [carrera, setCarrera] = useState("");
+  const [universidad, setUniversidad] = useState("");
+  const [fechaNacimiento, setFechaNacimiento] = useState(null);
 
-  const handleGuardar = async () => {
-    if (!carrera.trim()) return;
+  const handleSave = async () => {
+    if (!carrera || !universidad || !fechaNacimiento) {
+        alert("Por favor completa todos los campos para continuar.");
+        return;
+    }
+
     setLoading(true);
-
     try {
-      const user = auth.currentUser;
-      if (user) {
-        // Guardamos el nombre de la carrera en el perfil del usuario
-        await setDoc(doc(db, "usuarios", user.uid), {
-          carrera: carrera,
-          configurado: true, // Bandera para saber que ya pasó por aquí
-          email: user.email,
-          nombre: user.displayName
-        }, { merge: true });
+        // Guardamos los datos extendidos en Firestore
+        // Convertimos la fecha de objeto CalendarDate a String (YYYY-MM-DD)
+        const fechaStr = fechaNacimiento.toString();
 
-        // Avisamos a la App que ya terminó
-        onComplete(); 
-      }
+        await setDoc(doc(db, "usuarios", user.uid), {
+            email: user.email,
+            displayName: user.displayName,
+            photoURL: user.photoURL,
+            carrera: carrera,
+            universidad: universidad,
+            fechaNacimiento: fechaStr,
+            createdAt: new Date().toISOString()
+        }, { merge: true }); // Merge para no borrar datos si ya existen
+
+        // Avisamos a App.jsx que terminamos
+        onComplete();
+        
     } catch (error) {
-      console.error("Error al guardar carrera:", error);
+        console.error("Error guardando datos:", error);
+        alert("Hubo un error al guardar tus datos.");
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-black p-4">
-      {/* Fondo decorativo */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
-        <div className="absolute top-[-20%] left-[20%] w-[600px] h-[600px] bg-primary/20 rounded-full blur-[120px]" />
-      </div>
-
-      <Card className="w-full max-w-md z-10 bg-background/60 backdrop-blur-md border border-white/10">
-        <CardHeader className="flex flex-col gap-2 text-center pt-8 px-8">
-          <div className="mx-auto bg-gradient-to-tr from-primary to-secondary p-3 rounded-xl mb-2 shadow-lg shadow-primary/20">
-            <Rocket className="text-white" size={32} />
-          </div>
-          <h1 className="text-2xl font-bold">¡Bienvenido a bordo! 🚀</h1>
-          <p className="text-default-500">Para configurar tu espacio de trabajo, necesitamos saber qué estás estudiando.</p>
-        </CardHeader>
+    <div className="min-h-screen bg-black flex items-center justify-center p-4 relative overflow-hidden">
         
-        <CardBody className="gap-6 py-8 px-8">
-          <Input 
-            autoFocus
-            label="Nombre de tu Carrera" 
-            placeholder="Ej: Ingeniería en Sistemas, Medicina, Abogacía..." 
-            variant="bordered"
-            size="lg"
-            startContent={<GraduationCap className="text-default-400"/>}
-            value={carrera}
-            onChange={(e) => setCarrera(e.target.value)}
-          />
+        {/* Fondo decorativo */}
+        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-primary/20 rounded-full blur-[150px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-secondary/20 rounded-full blur-[150px] pointer-events-none" />
 
-          <Button 
-            onPress={handleGuardar} 
-            color="primary" 
-            size="lg" 
-            className="font-bold shadow-lg shadow-primary/20"
-            isLoading={loading}
-          >
-            Comenzar mi Carrera
-          </Button>
-        </CardBody>
-      </Card>
+        <Card className="w-full max-w-md bg-background/80 backdrop-blur-md border border-white/10 shadow-2xl">
+            <CardHeader className="flex flex-col gap-2 pt-8 px-8 text-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center mx-auto mb-2 shadow-lg shadow-primary/30">
+                    <Rocket className="text-white" size={24} />
+                </div>
+                <h1 className="text-2xl font-bold text-white">¡Casi estamos listos!</h1>
+                <p className="text-default-400 text-sm">
+                    Hola <span className="text-primary font-semibold">{user?.displayName?.split(" ")[0]}</span>, necesitamos unos datos para configurar tu espacio académico.
+                </p>
+            </CardHeader>
+
+            <CardBody className="px-8 pb-8 gap-6">
+                
+                {/* 1. Carrera */}
+                <Input 
+                    label="¿Qué estás estudiando?" 
+                    placeholder="Ej: Ingeniería en Sistemas"
+                    variant="bordered"
+                    startContent={<GraduationCap className="text-default-400" size={18}/>}
+                    value={carrera}
+                    onValueChange={setCarrera}
+                />
+
+                {/* 2. Universidad */}
+                <Input 
+                    label="Universidad / Institución" 
+                    placeholder="Ej: UTN, UBA, Siglo 21"
+                    variant="bordered"
+                    startContent={<University className="text-default-400" size={18}/>}
+                    value={universidad}
+                    onValueChange={setUniversidad}
+                />
+
+                {/* 3. Fecha Nacimiento */}
+                <DatePicker 
+                    label="Fecha de Nacimiento"
+                    variant="bordered"
+                    startContent={<Calendar className="text-default-400" size={18}/>}
+                    value={fechaNacimiento}
+                    onChange={setFechaNacimiento}
+                    showMonthAndYearPickers
+                />
+
+                <Button 
+                    size="lg" 
+                    className="w-full font-bold bg-gradient-to-r from-primary to-secondary text-white shadow-lg"
+                    onPress={handleSave}
+                    isLoading={loading}
+                >
+                    Comenzar Aventura 🚀
+                </Button>
+
+            </CardBody>
+        </Card>
     </div>
   );
 };

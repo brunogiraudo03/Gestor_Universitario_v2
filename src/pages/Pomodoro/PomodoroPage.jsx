@@ -1,203 +1,288 @@
 import { useState, useEffect, useRef } from "react";
 import { 
-  Button, Card, CardBody, CircularProgress, Chip, Input, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure 
+  Card, CardBody, Button, CircularProgress, Tooltip, 
+  Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Input, Switch, useDisclosure
 } from "@nextui-org/react";
-import { Play, Pause, RotateCcw, Settings2, Timer, Coffee, Armchair } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { ChevronLeft } from "lucide-react";
+import { 
+  Play, Pause, RotateCcw, Coffee, BrainCircuit, Armchair, 
+  Settings, Volume2, VolumeX, Save 
+} from "lucide-react";
+
+// Sonido de campana
+const ALARM_SOUND = "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3";
 
 const PomodoroPage = () => {
-  const navigate = useNavigate();
-  const { isOpen, onOpen, onOpenChange } = useDisclosure(); // Para el modal de configuración
-
-  // Configuración inicial (minutos)
-  const [config, setConfig] = useState({
-    focus: 25,
-    short: 5,
-    long: 15
+  // --- ESTADOS ---
+  const [mode, setMode] = useState("focus"); // focus, short, long
+  const [isActive, setIsActive] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(25 * 60);
+  
+  // Configuración Personalizada (Carga desde localStorage o usa defaults)
+  const [config, setConfig] = useState(() => {
+    const saved = localStorage.getItem("pomodoroConfig");
+    return saved ? JSON.parse(saved) : {
+      focus: 25,
+      short: 5,
+      long: 15,
+      sound: true
+    };
   });
 
-  // Estados del Timer
-  const [mode, setMode] = useState("focus"); // 'focus', 'short', 'long'
-  const [timeLeft, setTimeLeft] = useState(config.focus * 60);
-  const [isActive, setIsActive] = useState(false);
-  
-  const timerRef = useRef(null);
+  // Modal de Configuración
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  // Estado temporal para el formulario del modal
+  const [tempConfig, setTempConfig] = useState(config); 
 
-  // Colores y textos según el modo
-  const modeData = {
-    focus: { color: "danger", icon: Timer, label: "Modo Enfoque", quote: "Mantente concentrado." },
-    short: { color: "success", icon: Coffee, label: "Descanso Corto", quote: "Respira y estira." },
-    long: { color: "primary", icon: Armchair, label: "Descanso Largo", quote: "Recarga energías." }
-  };
+  const audioRef = useRef(new Audio(ALARM_SOUND));
 
-  // Efecto del Cronómetro
+  // --- EFECTOS ---
+
+  // 1. Pedir permiso de notificaciones al inicio
   useEffect(() => {
-    if (isActive && timeLeft > 0) {
-      timerRef.current = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
-      }, 1000);
-    } else if (timeLeft === 0) {
-      setIsActive(false);
-      clearInterval(timerRef.current);
-      // Aquí podrías poner un sonido de alarma en el futuro
+    if (Notification.permission !== "granted") {
+      Notification.requestPermission();
     }
-    return () => clearInterval(timerRef.current);
+  }, []);
+
+  // 2. Timer Logic
+  useEffect(() => {
+    let interval = null;
+    if (isActive && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft((time) => time - 1);
+      }, 1000);
+    } else if (timeLeft === 0 && isActive) {
+      handleTimerComplete();
+    }
+    return () => clearInterval(interval);
   }, [isActive, timeLeft]);
 
-  // Cambiar de modo
-  const switchMode = (newMode) => {
+  // 3. Título de la pestaña
+  useEffect(() => {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    const timeStr = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    document.title = `${timeStr} - ${MODES[mode].label}`;
+    return () => document.title = "Gestor Universitario";
+  }, [timeLeft, mode]);
+
+  // --- FUNCIONES ---
+
+  const handleTimerComplete = () => {
+    setIsActive(false);
+    
+    if (config.sound) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch(e => console.error(e));
+    }
+
+    if (Notification.permission === "granted") {
+      new Notification("⏰ ¡Tiempo terminado!", {
+        body: mode === "focus" ? "¡Bien hecho! Tómate un descanso." : "Hora de volver a estudiar.",
+        icon: "/pwa-192x192.png"
+      });
+    }
+  };
+
+  const toggleTimer = () => setIsActive(!isActive);
+
+  const resetTimer = () => {
+    setIsActive(false);
+    setTimeLeft(config[mode] * 60);
+  };
+
+  const changeMode = (newMode) => {
     setMode(newMode);
     setIsActive(false);
     setTimeLeft(config[newMode] * 60);
   };
 
-  // Formatear tiempo mm:ss
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  const handleSaveConfig = () => {
+    // Guardar en Estado y LocalStorage
+    setConfig(tempConfig);
+    localStorage.setItem("pomodoroConfig", JSON.stringify(tempConfig));
+    
+    // Aplicar cambios al timer actual (Reiniciar)
+    setIsActive(false);
+    setTimeLeft(tempConfig[mode] * 60);
+    onOpenChange(false); // Cerrar modal
   };
 
-  // Calcular porcentaje para el círculo (inverso: empieza lleno 100 y baja a 0)
-  const totalTime = config[mode] * 60;
-  const progressValue = (timeLeft / totalTime) * 100;
+  // --- DATOS VISUALES ---
+  const MODES = {
+    focus: { label: "Enfoque", color: "primary", icon: BrainCircuit },
+    short: { label: "Corto", color: "success", icon: Coffee },
+    long: { label: "Largo", color: "warning", icon: Armchair },
+  };
 
-  // Guardar configuración nueva
-  const handleSaveConfig = (newConfig) => {
-    setConfig({
-        focus: parseInt(newConfig.focus) || 25,
-        short: parseInt(newConfig.short) || 5,
-        long: parseInt(newConfig.long) || 15
-    });
-    // Si estamos editando el modo actual, reseteamos el tiempo
-    if (mode === "focus") setTimeLeft((parseInt(newConfig.focus) || 25) * 60);
-    if (mode === "short") setTimeLeft((parseInt(newConfig.short) || 5) * 60);
-    if (mode === "long") setTimeLeft((parseInt(newConfig.long) || 15) * 60);
-    
-    setIsActive(false);
+  const totalTime = config[mode] * 60;
+  const progress = ((totalTime - timeLeft) / totalTime) * 100;
+  
+  const formatTime = (seconds) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-[1000px] mx-auto min-h-screen flex flex-col">
-      <Button variant="light" startContent={<ChevronLeft/>} onPress={() => navigate("/")} className="mb-4 pl-0 text-default-500 self-start">
-        Volver al Dashboard
-      </Button>
+    <div className="flex flex-col items-center justify-center min-h-[85vh] p-4 max-w-md mx-auto">
+      
+      {/* 1. SELECCIÓN DE MODO */}
+      <div className="flex gap-2 mb-8 bg-content2 p-1.5 rounded-full shadow-inner">
+        {Object.entries(MODES).map(([key, data]) => (
+          <Button
+            key={key}
+            size="sm"
+            variant={mode === key ? "solid" : "light"}
+            color={mode === key ? data.color : "default"}
+            onPress={() => changeMode(key)}
+            className="rounded-full font-medium min-w-[80px]"
+            startContent={<data.icon size={16} />}
+          >
+            {data.label}
+          </Button>
+        ))}
+      </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center gap-8">
-        
-        {/* Selector de Modos (Chips) */}
-        <div className="flex gap-4 p-2 bg-default-100 rounded-full">
-            {Object.keys(modeData).map((m) => (
-                <Chip
-                    key={m}
-                    variant={mode === m ? "solid" : "light"}
-                    color={mode === m ? modeData[m].color : "default"}
-                    className="cursor-pointer transition-all px-4 py-5 font-bold"
-                    onClick={() => switchMode(m)}
-                >
-                    {modeData[m].label}
-                </Chip>
-            ))}
-        </div>
-
-        {/* El Gran Reloj */}
-        <div className="relative flex items-center justify-center">
-            {/* Círculo de Fondo (Sombra) */}
-            <CircularProgress
-                classNames={{
-                    svg: "w-[300px] h-[300px] drop-shadow-md",
-                    indicator: `stroke-${modeData[mode].color}-500`,
-                    track: "stroke-default-100",
-                }}
-                value={progressValue}
-                strokeWidth={3}
-                showValueLabel={false}
-                size="lg"
-                aria-label="Timer visual"
-            />
+      {/* 2. RELOJ PRINCIPAL */}
+      <Card className="w-full shadow-xl border border-default-100 bg-gradient-to-br from-content1 to-default-50">
+        <CardBody className="flex flex-col items-center justify-center py-12 relative overflow-hidden">
             
-            {/* Contenido Central */}
-            <div className="absolute flex flex-col items-center gap-2">
-                <span className={`text-7xl font-bold tracking-tighter text-${modeData[mode].color}-500 font-mono`}>
+            {/* Círculo de Progreso */}
+            <CircularProgress 
+                classNames={{
+                    svg: "w-72 h-72 drop-shadow-lg transform rotate-[-90deg]",
+                    indicator: mode === "focus" ? "stroke-primary" : mode === "short" ? "stroke-success" : "stroke-warning",
+                    track: "stroke-default-100/50",
+                }}
+                value={progress}
+                strokeWidth={3}
+                showValueLabel={false} 
+                aria-label="Progreso"
+            />
+
+            {/* Texto del Reloj */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none">
+                <span className="text-7xl font-black tracking-tighter tabular-nums text-foreground drop-shadow-sm">
                     {formatTime(timeLeft)}
                 </span>
-                <p className="text-default-400 font-medium">{isActive ? "CORRIENDO" : "PAUSADO"}</p>
+                <p className="text-default-400 font-bold uppercase tracking-[0.2em] text-xs mt-2 opacity-80">
+                    {isActive ? "TIEMPO RESTANTE" : "LISTO PARA EMPEZAR"}
+                </p>
             </div>
-        </div>
+            
+            {/* Botón Flotante Configuración (Dentro de la card para diseño limpio) */}
+            <div className="absolute top-4 right-4">
+                <Button isIconOnly size="sm" variant="light" onPress={() => { setTempConfig(config); onOpen(); }}>
+                    <Settings size={20} className="text-default-400 hover:text-foreground transition-colors"/>
+                </Button>
+            </div>
 
-        {/* Cita motivacional dinámica */}
-        <p className="text-xl text-default-500 font-light italic text-center max-w-md">
-            "{modeData[mode].quote}"
-        </p>
+        </CardBody>
+      </Card>
 
-        {/* Controles Principales */}
-        <div className="flex items-center gap-6">
-            <Button 
-                isIconOnly size="lg" radius="full" variant="flat" color="default"
-                onPress={() => onOpen()}
-            >
-                <Settings2 />
+      {/* 3. CONTROLES INFERIORES */}
+      <div className="flex items-center gap-8 mt-10">
+        
+        <Tooltip content="Reiniciar Reloj">
+            <Button isIconOnly radius="full" variant="flat" className="bg-default-100 text-default-500" onPress={resetTimer}>
+                <RotateCcw size={22} />
             </Button>
+        </Tooltip>
 
-            <Button 
-                size="lg" radius="full" 
-                color={modeData[mode].color} 
-                variant="shadow"
-                className="w-32 h-16 text-2xl"
-                onPress={() => setIsActive(!isActive)}
-            >
-                {isActive ? <Pause fill="currentColor" /> : <Play fill="currentColor" />}
-            </Button>
+        <Button 
+            size="lg" 
+            radius="full" 
+            className={`w-24 h-24 shadow-2xl transition-transform active:scale-95 ${isActive ? "bg-default-200 text-default-600" : `bg-${MODES[mode].color} text-white`}`}
+            onPress={toggleTimer}
+        >
+            {isActive ? <Pause size={38} className="fill-current"/> : <Play size={38} className="fill-current ml-1"/>}
+        </Button>
 
+        <Tooltip content={config.sound ? "Sonido Activado" : "Silenciado"}>
             <Button 
-                isIconOnly size="lg" radius="full" variant="flat" color="default"
-                onPress={() => { setIsActive(false); setTimeLeft(config[mode] * 60); }}
+                isIconOnly radius="full" variant="flat" 
+                className={config.sound ? "bg-primary/10 text-primary" : "bg-default-100 text-default-400"}
+                onPress={() => setConfig({...config, sound: !config.sound})}
             >
-                <RotateCcw />
+                {config.sound ? <Volume2 size={22} /> : <VolumeX size={22} />}
             </Button>
-        </div>
+        </Tooltip>
 
       </div>
 
-      {/* Modal de Configuración */}
-      <ConfigModal 
-        isOpen={isOpen} 
-        onOpenChange={onOpenChange} 
-        currentConfig={config} 
-        onSave={handleSaveConfig} 
-      />
+      <p className="mt-8 text-center text-xs text-default-400 max-w-[250px] leading-relaxed">
+        {mode === "focus" 
+            ? "💡 Tip: Evita mirar el celular hasta que suene la campana." 
+            : "🧘 Tip: Levántate, estira las piernas y toma agua."}
+      </p>
+
+      {/* --- MODAL DE CONFIGURACIÓN --- */}
+      <Modal isOpen={isOpen} onOpenChange={onOpenChange} backdrop="blur">
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">Configuración del Timer</ModalHeader>
+              <ModalBody>
+                <div className="space-y-4">
+                    <p className="text-sm text-default-500">Ajusta los tiempos en minutos:</p>
+                    
+                    <div className="grid grid-cols-3 gap-4">
+                        <Input 
+                            type="number" 
+                            label="Enfoque" 
+                            labelPlacement="outside"
+                            placeholder="25"
+                            endContent={<span className="text-default-400 text-xs">min</span>}
+                            value={tempConfig.focus}
+                            onChange={(e) => setTempConfig({...tempConfig, focus: Number(e.target.value)})}
+                        />
+                        <Input 
+                            type="number" 
+                            label="Corto" 
+                            labelPlacement="outside"
+                            placeholder="5"
+                            endContent={<span className="text-default-400 text-xs">min</span>}
+                            value={tempConfig.short}
+                            onChange={(e) => setTempConfig({...tempConfig, short: Number(e.target.value)})}
+                        />
+                        <Input 
+                            type="number" 
+                            label="Largo" 
+                            labelPlacement="outside"
+                            placeholder="15"
+                            endContent={<span className="text-default-400 text-xs">min</span>}
+                            value={tempConfig.long}
+                            onChange={(e) => setTempConfig({...tempConfig, long: Number(e.target.value)})}
+                        />
+                    </div>
+
+                    <div className="flex items-center justify-between p-3 bg-default-100 rounded-lg mt-4">
+                        <div className="flex items-center gap-2">
+                            <Volume2 size={18} />
+                            <span className="text-sm font-medium">Sonido de Campana</span>
+                        </div>
+                        <Switch 
+                            size="sm" 
+                            isSelected={tempConfig.sound} 
+                            onValueChange={(val) => setTempConfig({...tempConfig, sound: val})}
+                        />
+                    </div>
+                </div>
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="light" onPress={onClose}>Cancelar</Button>
+                <Button color="primary" onPress={handleSaveConfig} startContent={<Save size={18}/>}>
+                  Guardar Cambios
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
     </div>
   );
-};
-
-// Componente pequeño para el modal de configuración
-const ConfigModal = ({ isOpen, onOpenChange, currentConfig, onSave }) => {
-    const [localConfig, setLocalConfig] = useState(currentConfig);
-
-    return (
-        <Modal isOpen={isOpen} onOpenChange={onOpenChange} backdrop="blur">
-            <ModalContent>
-                {(onClose) => (
-                    <>
-                        <ModalHeader>Personalizar Tiempos (minutos)</ModalHeader>
-                        <ModalBody>
-                            <div className="flex gap-4">
-                                <Input type="number" label="Enfoque" value={localConfig.focus} onChange={(e) => setLocalConfig({...localConfig, focus: e.target.value})} />
-                                <Input type="number" label="Descanso Corto" value={localConfig.short} onChange={(e) => setLocalConfig({...localConfig, short: e.target.value})} />
-                                <Input type="number" label="Descanso Largo" value={localConfig.long} onChange={(e) => setLocalConfig({...localConfig, long: e.target.value})} />
-                            </div>
-                        </ModalBody>
-                        <ModalFooter>
-                            <Button color="primary" onPress={() => { onSave(localConfig); onClose(); }}>
-                                Guardar Cambios
-                            </Button>
-                        </ModalFooter>
-                    </>
-                )}
-            </ModalContent>
-        </Modal>
-    );
 };
 
 export default PomodoroPage;

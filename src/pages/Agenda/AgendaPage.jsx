@@ -59,27 +59,38 @@ const AgendaPage = () => {
     onClose();
   };
 
-  // --- NUEVA FUNCIÓN: RECORDATORIO GOOGLE ---
+  // --- NUEVA FUNCIÓN CORREGIDA (SOLUCIÓN ZONA HORARIA) ---
   const handleAddToCalendar = (evento) => {
-    // 1. Construir fecha de inicio (Si no tiene hora, ponemos 09:00 AM)
+    // 1. Hora de inicio (default 09:00 si no hay hora)
     const horaInicio = evento.hora || "09:00";
+    // Construimos la fecha localmente
     const fechaString = `${evento.fechaEntrega}T${horaInicio}:00`;
     const fechaDate = new Date(fechaString);
 
-    // 2. Fecha de fin (1 hora después por defecto)
+    // 2. Hora de fin (1 hora después)
     const fechaFinDate = new Date(fechaDate.getTime() + 60 * 60 * 1000);
 
-    // 3. Formatear para Google (YYYYMMDDTHHMMSSZ)
-    const formatGoogle = (date) => date.toISOString().replace(/-|:|\.\d\d\d/g, "");
+    // 3. Formateador MANUAL para forzar la hora local (evita conversión a UTC)
+    // Devuelve formato: YYYYMMDDTHHMMSS
+    const formatDateLocal = (date) => {
+        const pad = (n) => n.toString().padStart(2, '0');
+        return date.getFullYear() +
+               pad(date.getMonth() + 1) +
+               pad(date.getDate()) + 'T' +
+               pad(date.getHours()) +
+               pad(date.getMinutes()) +
+               pad(date.getSeconds());
+    };
 
-    const start = formatGoogle(fechaDate);
-    const end = formatGoogle(fechaFinDate);
+    const start = formatDateLocal(fechaDate);
+    const end = formatDateLocal(fechaFinDate);
 
-    // 4. Armar URL y abrir
+    // 4. Datos del evento
     const etiqueta = TIPOS[evento.tipo]?.label || "Evento";
     const title = encodeURIComponent(`🎓 ${evento.texto} (${etiqueta})`);
-    const details = encodeURIComponent("Recordatorio creado desde Gestor Universitario.");
+    const details = encodeURIComponent("Recordatorio desde Gestor Universitario.");
     
+    // 5. URL
     const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${details}&sf=true&output=xml`;
 
     window.open(url, "_blank");
