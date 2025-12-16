@@ -1,18 +1,17 @@
 import { useState } from "react";
 import { 
   Button, Card, CardBody, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, 
-  Input, Select, SelectItem, useDisclosure, Chip, Spinner, Tooltip
+  Input, Select, SelectItem, useDisclosure, Spinner
 } from "@nextui-org/react";
 import { 
-  ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, 
-  AlertCircle, BookOpen, CheckSquare, Coffee, Trash2, GraduationCap
+  ChevronLeft, ChevronRight, Plus, AlertCircle, BookOpen, CheckSquare, Coffee, Trash2, GraduationCap, BellRing 
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { 
   format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, 
-  eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, isToday 
+  eachDayOfInterval, isSameMonth, isToday, addMonths, subMonths 
 } from "date-fns";
-import { es } from "date-fns/locale"; // Para español
+import { es } from "date-fns/locale"; 
 import { useTodos } from "../../hooks/useTodos";
 
 // CONFIGURACIÓN DE TIPOS DE EVENTO
@@ -40,7 +39,7 @@ const AgendaPage = () => {
   const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
   const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
 
-  // Generar los días a mostrar (incluyendo los grisados del mes anterior/siguiente)
+  // Generar los días a mostrar
   const daysInGrid = () => {
     const start = startOfWeek(startOfMonth(currentDate), { weekStartsOn: 1 }); // Lunes
     const end = endOfWeek(endOfMonth(currentDate), { weekStartsOn: 1 });
@@ -55,19 +54,38 @@ const AgendaPage = () => {
 
   const handleGuardar = async () => {
     if (!nuevoEvento.texto.trim()) return;
-    
-    // Ajustar fecha para guardar correctamente (zona horaria local)
-    // Usamos la fecha seleccionada del calendario (selectedDate)
     const fechaISO = format(selectedDate, "yyyy-MM-dd");
-
-    await agregarEvento({
-        ...nuevoEvento,
-        fechaEntrega: fechaISO,
-    });
+    await agregarEvento({ ...nuevoEvento, fechaEntrega: fechaISO });
     onClose();
   };
 
-  // Filtrar eventos del día para mostrarlos en el modal
+  // --- NUEVA FUNCIÓN: RECORDATORIO GOOGLE ---
+  const handleAddToCalendar = (evento) => {
+    // 1. Construir fecha de inicio (Si no tiene hora, ponemos 09:00 AM)
+    const horaInicio = evento.hora || "09:00";
+    const fechaString = `${evento.fechaEntrega}T${horaInicio}:00`;
+    const fechaDate = new Date(fechaString);
+
+    // 2. Fecha de fin (1 hora después por defecto)
+    const fechaFinDate = new Date(fechaDate.getTime() + 60 * 60 * 1000);
+
+    // 3. Formatear para Google (YYYYMMDDTHHMMSSZ)
+    const formatGoogle = (date) => date.toISOString().replace(/-|:|\.\d\d\d/g, "");
+
+    const start = formatGoogle(fechaDate);
+    const end = formatGoogle(fechaFinDate);
+
+    // 4. Armar URL y abrir
+    const etiqueta = TIPOS[evento.tipo]?.label || "Evento";
+    const title = encodeURIComponent(`🎓 ${evento.texto} (${etiqueta})`);
+    const details = encodeURIComponent("Recordatorio creado desde Gestor Universitario.");
+    
+    const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${details}&sf=true&output=xml`;
+
+    window.open(url, "_blank");
+  };
+
+  // Filtrar eventos del día
   const eventosDelDia = selectedDate 
     ? todos.filter(t => t.fechaEntrega === format(selectedDate, "yyyy-MM-dd"))
     : [];
@@ -117,8 +135,6 @@ const AgendaPage = () => {
                     const isCurrentMonth = isSameMonth(day, currentDate);
                     const isTodayDay = isToday(day);
                     const formattedDay = format(day, "yyyy-MM-dd");
-                    
-                    // Buscar eventos para este día
                     const dayEvents = todos.filter(t => t.fechaEntrega === formattedDay);
 
                     return (
@@ -131,7 +147,6 @@ const AgendaPage = () => {
                                 hover:bg-default-100
                             `}
                         >
-                            {/* Número del día */}
                             <div className={`
                                 w-7 h-7 flex items-center justify-center rounded-full text-sm font-bold mb-1
                                 ${isTodayDay ? "bg-primary text-white shadow-lg shadow-primary/40" : ""}
@@ -139,7 +154,6 @@ const AgendaPage = () => {
                                 {format(day, "d")}
                             </div>
 
-                            {/* Píldoras de Eventos */}
                             <div className="flex flex-col gap-1 overflow-hidden">
                                 {dayEvents.map(event => {
                                     const tipoInfo = TIPOS[event.tipo] || TIPOS.tarea;
@@ -187,18 +201,32 @@ const AgendaPage = () => {
                              const Icon = tipoInfo.icon;
                              return (
                                 <div key={ev.id} className="flex items-center justify-between p-3 bg-default-50 rounded-xl border border-default-200">
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-3 overflow-hidden">
                                         <div className={`p-2 rounded-lg bg-${tipoInfo.color}/20 text-${tipoInfo.color}`}>
                                             <Icon size={18} />
                                         </div>
-                                        <div>
-                                            <p className="font-semibold text-sm">{ev.texto}</p>
+                                        <div className="min-w-0">
+                                            <p className="font-semibold text-sm truncate">{ev.texto}</p>
                                             <p className="text-tiny text-default-500 capitalize">{tipoInfo.label} {ev.hora && `• ${ev.hora}hs`}</p>
                                         </div>
                                     </div>
-                                    <Button isIconOnly size="sm" color="danger" variant="light" onPress={() => borrarTodo(ev.id)}>
-                                        <Trash2 size={16}/>
-                                    </Button>
+                                    
+                                    {/* BOTONES DE ACCIÓN */}
+                                    <div className="flex gap-1">
+                                        {/* Botón Google Calendar */}
+                                        <Button 
+                                            isIconOnly size="sm" variant="light" color="primary" 
+                                            onPress={() => handleAddToCalendar(ev)}
+                                            title="Recordatorio en Google Calendar"
+                                        >
+                                            <BellRing size={16}/>
+                                        </Button>
+
+                                        {/* Botón Borrar */}
+                                        <Button isIconOnly size="sm" color="danger" variant="light" onPress={() => borrarTodo(ev.id)}>
+                                            <Trash2 size={16}/>
+                                        </Button>
+                                    </div>
                                 </div>
                              )
                         })}
