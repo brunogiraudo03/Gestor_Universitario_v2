@@ -7,6 +7,7 @@ import { db } from "../../config/firebase";
 import useUserStore from "../../stores/useUserStore";
 import { Rocket, GraduationCap, Calendar, University } from "lucide-react";
 import { parseDate } from "@internationalized/date"; // Utilidad de NextUI para fechas
+import { toast } from "sonner";
 
 const OnboardingPage = ({ onComplete }) => {
   const { user } = useUserStore();
@@ -19,7 +20,7 @@ const OnboardingPage = ({ onComplete }) => {
 
   const handleSave = async () => {
     if (!carrera || !universidad || !fechaNacimiento) {
-        alert("Por favor completa todos los campos para continuar.");
+        toast.success("Por favor completa todos los campos para continuar.");
         return;
     }
 
@@ -44,7 +45,7 @@ const OnboardingPage = ({ onComplete }) => {
         
     } catch (error) {
         console.error("Error guardando datos:", error);
-        alert("Hubo un error al guardar tus datos.");
+        toast.error("Hubo un error al guardar tus datos.");
     } finally {
         setLoading(false);
     }

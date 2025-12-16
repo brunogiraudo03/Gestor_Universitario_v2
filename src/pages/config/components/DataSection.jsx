@@ -4,15 +4,18 @@ import { Download, Upload, Trash2, AlertTriangle, FileText } from "lucide-react"
 import useUserStore from "../../../stores/useUserStore";
 import { collection, getDocs, writeBatch, query, where, doc } from "firebase/firestore";
 import { db } from "../../../config/firebase";
+import { toast } from "sonner"; 
 
 const DataSection = () => {
   const { user } = useUserStore();
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef(null);
 
-  // --- LÓGICA DE LIMPIEZA ---
+  // --- 1. LIMPIEZA DE AGENDA ---
   const handleCleanAgenda = async () => {
-    if (!confirm("¿Borrar tareas antiguas ya finalizadas?")) return;
+    // Confirmación nativa (por seguridad es mejor que el usuario tenga que frenar y leer)
+    if (!confirm("⚠️ ¿Estás seguro de borrar los eventos pasados?")) return;
+    
     setLoading(true);
     try {
         const hoy = new Date();
@@ -22,25 +25,31 @@ const DataSection = () => {
         const snapshot = await getDocs(q);
 
         if (snapshot.empty) {
-            alert("Tu agenda ya está limpia.");
+            toast.info("Tu agenda ya está limpia y al día. ✨");
             setLoading(false); return;
         }
 
         const batch = writeBatch(db);
         snapshot.docs.forEach((doc) => batch.delete(doc.ref));
         await batch.commit();
-        alert(`Se eliminaron ${snapshot.size} eventos antiguos.`);
-        window.location.reload(); 
+        
+        toast.success(`¡Listo! Eliminamos ${snapshot.size} eventos antiguos.`);
+        
+        // Recarga suave
+        setTimeout(() => window.location.reload(), 1500); 
+
     } catch (error) {
         console.error(error);
-        alert("Error al limpiar.");
+        toast.error("Hubo un error al intentar limpiar la agenda.");
     }
     setLoading(false);
   };
 
-  // --- LÓGICA DE EXPORTAR ---
+  // --- 2. EXPORTAR DATOS ---
   const handleExportData = async () => {
     setLoading(true);
+    const toastId = toast.loading("Generando copia de seguridad..."); // Feedback de carga
+
     try {
         const materiasRef = collection(db, "usuarios", user.uid, "materias");
         const materias = (await getDocs(materiasRef)).docs.map(d => ({ id: d.id, ...d.data() }));
@@ -62,13 +71,17 @@ const DataSection = () => {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        
+        toast.dismiss(toastId);
+        toast.success("Copia descargada correctamente. 📂");
     } catch (error) {
-        alert("Error al exportar");
+        toast.dismiss(toastId);
+        toast.error("Error al exportar. Intenta nuevamente.");
     }
     setLoading(false);
   };
 
-  // --- LÓGICA DE IMPORTAR ---
+  // --- 3. IMPORTAR DATOS ---
   const handleImportClick = () => fileInputRef.current.click();
   
   const handleFileChange = async (e) => {
@@ -79,23 +92,31 @@ const DataSection = () => {
         try {
             setLoading(true);
             const data = JSON.parse(event.target.result);
-            if (!confirm("⚠️ Se sobrescribirán tus datos. ¿Continuar?")) { setLoading(false); return; }
+            if (!confirm("⚠️ ATENCIÓN: Esto sobrescribirá tus materias actuales. ¿Continuar?")) { 
+                setLoading(false); return; 
+            }
 
             const batch = writeBatch(db);
             data.materias?.forEach(m => batch.set(doc(db, "usuarios", user.uid, "materias", m.id || doc(collection(db, "temp")).id), m));
             data.horarios?.forEach(h => batch.set(doc(db, "usuarios", user.uid, "horarios", h.id || doc(collection(db, "temp")).id), h));
             
             await batch.commit();
-            window.location.reload();
-        } catch (error) { alert("Error al importar."); } 
+            toast.success("¡Datos restaurados con éxito! 🚀");
+            setTimeout(() => window.location.reload(), 1500);
+        } catch (error) { 
+            toast.error("El archivo está dañado o no es válido."); 
+        } 
         finally { setLoading(false); e.target.value = null; }
     };
     reader.readAsText(file);
   };
 
-  // --- LÓGICA DE RESET ---
+  // --- 4. RESETEAR CUENTA (PELIGRO) ---
   const handleResetAccount = async () => {
-    if(!confirm("⚠️ PELIGRO: Se borrará TODO permanentemente. ¿Seguro?")) return;
+    // Doble confirmación por seguridad
+    if(!confirm("⛔ PELIGRO: Se borrará TODO (Materias, Notas, Horarios).")) return;
+    if(!confirm("¿Estás 100% seguro? Esta acción no se puede deshacer.")) return;
+
     setLoading(true);
     try {
         const batch = writeBatch(db);
@@ -105,28 +126,32 @@ const DataSection = () => {
             snap.docs.forEach(d => batch.delete(d.ref));
         }
         await batch.commit();
-        window.location.reload();
-    } catch (e) { alert("Error al resetear."); }
+        
+        toast.success("Cuenta reseteada a 0. Empezando de nuevo...");
+        setTimeout(() => window.location.reload(), 2000);
+    } catch (e) { 
+        toast.error("No se pudo resetear la cuenta. Revisa tu conexión."); 
+    }
     setLoading(false);
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-10">
         <h3 className="text-lg font-bold px-1 mt-6">Gestión de Datos</h3>
         
         {/* Mantenimiento */}
         <Card className="border border-warning-200 bg-warning-50/50 dark:bg-warning-900/10">
-            <CardBody className="p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <CardBody className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                     <div className="p-2 bg-warning-100 text-warning-700 rounded-lg dark:bg-warning-900/50 dark:text-warning-500">
                         <AlertTriangle size={20}/>
                     </div>
                     <div>
                         <span className="font-bold text-sm">Limpiar Agenda</span>
-                        <p className="text-tiny text-default-500">Borrar eventos pasados para optimizar</p>
+                        <p className="text-tiny text-default-500">Borrar eventos pasados</p>
                     </div>
                 </div>
-                <Button size="sm" color="warning" variant="flat" onPress={handleCleanAgenda} isLoading={loading}>
+                <Button className="w-full sm:w-auto" size="sm" color="warning" variant="flat" onPress={handleCleanAgenda} isLoading={loading}>
                     Limpiar
                 </Button>
             </CardBody>
@@ -154,20 +179,33 @@ const DataSection = () => {
             </CardBody>
         </Card>
 
-        {/* Danger Zone */}
+        {/* --- ZONA DE PELIGRO (DISEÑO ARREGLADO) --- */}
         <Card className="border border-danger-200 bg-danger-50 dark:bg-danger-900/10">
-            <CardBody className="p-4 flex items-center justify-between">
+            <CardBody className="p-5 flex flex-col gap-6"> 
+                {/* ✅ CAMBIO: Usamos 'flex-col' y 'gap-6'.
+                   Esto separa visualmente el texto del botón y evita que se peguen.
+                */}
+                
                 <div className="flex items-center gap-3">
-                    <div className="p-2 bg-danger-100 text-danger-600 rounded-lg dark:bg-danger-900/50 dark:text-danger-500">
-                        <Trash2 size={20}/>
+                    <div className="p-3 bg-danger-100 text-danger-600 rounded-xl dark:bg-danger-900/50 dark:text-danger-500">
+                        <Trash2 size={24}/>
                     </div>
                     <div>
-                        <span className="font-bold text-sm text-danger">Resetear Cuenta</span>
-                        <p className="text-tiny text-danger-600/70">Borrar todo permanentemente</p>
+                        <span className="font-bold text-base text-danger">Resetear Cuenta</span>
+                        <p className="text-xs text-danger-600/70 dark:text-danger-400/70">
+                            Esta acción borrará todas tus materias, horarios y tareas de forma permanente.
+                        </p>
                     </div>
                 </div>
-                <Button size="sm" color="danger" variant="solid" onPress={handleResetAccount}>
-                    Borrar
+
+                <Button 
+                    className="w-full font-bold" 
+                    size="lg" 
+                    color="danger" 
+                    variant="shadow" 
+                    onPress={handleResetAccount}
+                >
+                    Borrar Todo
                 </Button>
             </CardBody>
         </Card>

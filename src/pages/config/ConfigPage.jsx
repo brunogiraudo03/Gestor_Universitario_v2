@@ -147,7 +147,7 @@ const ConfigPage = () => {
       <DataSection />
 
       <p className="text-center text-xs text-default-400 pt-8">
-        Gestor Universitario v2.2 • Bruno Giraudo
+        Uplanner v2.2 • Bruno Giraudo
       </p>
     </div>
   );

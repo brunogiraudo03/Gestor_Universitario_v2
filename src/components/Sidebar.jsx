@@ -35,7 +35,7 @@ const Sidebar = ({ onClose }) => { // Recibe onClose para cerrar el menú en mó
           <div className="bg-gradient-to-tr from-primary to-secondary p-2.5 rounded-xl shadow-lg shadow-primary/20">
               <School className="text-white" size={26} />
           </div>
-          <span className="text-lg font-bold tracking-tight leading-tight">Gestor<br/>Universitario</span>
+          <span className="text-lg font-bold tracking-tight leading-tight">Uplanner</span>
       </div>
       
       {/* MENÚ */}

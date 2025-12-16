@@ -5,6 +5,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "./config/firebase";
 import useUserStore from "./stores/useUserStore";
 import { Spinner } from "@nextui-org/react";
+import { Toaster } from 'sonner'
 
 // --- TUS COMPONENTES ORIGINALES ---
 import LoginPage from "./pages/Auth/LoginPage";
@@ -64,62 +65,61 @@ function App() {
   }
 
   return (
-    <Routes>
-      <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/" />} />
-      
-      {user && needsOnboarding ? (
-        <Route path="*" element={<OnboardingPage onComplete={handleOnboardingComplete} />} />
-      ) : (
-        <>
-          {/* AQUÍ ESTÁ LA MAGIA:
-             Envolvemos tus páginas dentro de <Layout>...</Layout>
-             para que tengan el menú lateral y la versión móvil.
-          */}
-          <Route path="/" element={user ? (
-            <Layout>
-                <DashboardPage userData={userData} />
-            </Layout>
-          ) : <Navigate to="/login" />} />
+    <>    
+      <Toaster position="top-center" richColors />
+      <Routes>
+        <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/" />} />
+        
+        {user && needsOnboarding ? (
+          <Route path="*" element={<OnboardingPage onComplete={handleOnboardingComplete} />} />
+        ) : (
+          <>
+            <Route path="/" element={user ? (
+              <Layout>
+                  <DashboardPage userData={userData} />
+              </Layout>
+            ) : <Navigate to="/login" />} />
 
-          <Route path="/plan" element={user ? (
-            <Layout>
-                <PlanEstudioPage />
-            </Layout>
-          ) : <Navigate to="/login" />} />
+            <Route path="/plan" element={user ? (
+              <Layout>
+                  <PlanEstudioPage />
+              </Layout>
+            ) : <Navigate to="/login" />} />
 
-          <Route path="/electivas" element={user ? (
-            <Layout>
-                <ElectivasPage />
-            </Layout>
-          ) : <Navigate to="/login" />} />
+            <Route path="/electivas" element={user ? (
+              <Layout>
+                  <ElectivasPage />
+              </Layout>
+            ) : <Navigate to="/login" />} />
 
-          <Route path="/correlativas" element={user ? (
-            <Layout>
-                <CorrelativasPage />
-            </Layout>
-          ) : <Navigate to="/login" />} />
+            <Route path="/correlativas" element={user ? (
+              <Layout>
+                  <CorrelativasPage />
+              </Layout>
+            ) : <Navigate to="/login" />} />
 
-          <Route path="/agenda" element={user ? (
-            <Layout>
-                <AgendaPage />
-            </Layout>
-          ) : <Navigate to="/login" />} />
+            <Route path="/agenda" element={user ? (
+              <Layout>
+                  <AgendaPage />
+              </Layout>
+            ) : <Navigate to="/login" />} />
 
-          <Route path="/pomodoro" element={user ? (
-            <Layout>
-                <PomodoroPage />
-            </Layout>
-          ) : <Navigate to="/login" />} />
+            <Route path="/pomodoro" element={user ? (
+              <Layout>
+                  <PomodoroPage />
+              </Layout>
+            ) : <Navigate to="/login" />} />
 
-          <Route path="/horarios" element={user ? (
-            <Layout>
-                <HorariosPage />
-            </Layout>
-          ) : <Navigate to="/login" />} />
-          <Route path="/config" element={user ? <Layout><ConfigPage /></Layout> : <Navigate to="/login" />} />
-        </>
-      )}
-    </Routes>
+            <Route path="/horarios" element={user ? (
+              <Layout>
+                  <HorariosPage />
+              </Layout>
+            ) : <Navigate to="/login" />} />
+            <Route path="/config" element={user ? <Layout><ConfigPage /></Layout> : <Navigate to="/login" />} />
+          </>
+        )}
+      </Routes>
+    </>
   );
 }
 

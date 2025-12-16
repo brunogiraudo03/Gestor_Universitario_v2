@@ -5,6 +5,7 @@ import useUserStore from "../../../stores/useUserStore";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { updateProfile } from "firebase/auth"; // Importante para actualizar nombre
 import { auth, db } from "../../../config/firebase";
+import { toast } from "sonner";
 
 const UserSection = () => {
   const { user } = useUserStore();
@@ -53,10 +54,10 @@ const UserSection = () => {
         fechaNacimiento
       });
 
-      alert("Perfil actualizado correctamente. Recarga la página para ver el nombre nuevo.");
+      toast.success("Perfil actualizado correctamente. Recarga la página para ver el nombre nuevo.");
     } catch (error) {
       console.error(error);
-      alert("Error al guardar perfil.");
+      toast.error("Error al guardar perfil.");
     }
     setLoading(false);
   };

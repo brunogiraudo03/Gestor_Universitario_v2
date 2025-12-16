@@ -144,7 +144,7 @@ const LoginPage = () => {
           <h1 className="text-3xl font-bold bg-gradient-to-br from-white to-default-500 bg-clip-text text-transparent animate-appearance-in">
             {isSignUp ? "Crear Cuenta" : "Bienvenido"}
           </h1>
-          <p className="text-sm text-default-400">Gestor Universitario</p>
+          <p className="text-sm text-default-400">Uplanner</p>
         </CardHeader>
         
         <CardBody className="gap-5 px-8 pb-8">
@@ -290,7 +290,6 @@ const LoginPage = () => {
                   </>
               )}
 
-              {/* VISTA 2: ÉXITO (SIN ALERTS) */}
               {resetStatus === "success" && (
                   <ModalBody className="py-10 flex flex-col items-center text-center gap-4">
                       <div className="w-16 h-16 bg-success/20 rounded-full flex items-center justify-center text-success mb-2 animate-bounce-in">
