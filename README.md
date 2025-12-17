@@ -1,41 +1,66 @@
-# 🎓 Gestor Universitario - V2
+# 🎓 Uplanner - Gestor Universitario Inteligente
 
-![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
-![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
-![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
-![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
-![NextUI](https://img.shields.io/badge/NextUI-000000?style=for-the-badge&logo=next.js&logoColor=white)
+![Uplanner Banner](public/pwa-512x512.png) 
+**Uplanner** es una Progressive Web App (PWA) diseñada para estudiantes universitarios que buscan organizar su carrera académica de manera eficiente, visual e inteligente. Más que una simple agenda, es un asistente que te ayuda a tomar decisiones sobre tu cursada.
 
-> **Una aplicación web progresiva (PWA) diseñada para estudiantes universitarios. Organiza tu carrera, materias, horarios y exámenes en un solo lugar.**
-
-🔗 **[Ver Demo en Vivo](https://gestor-universitario-v2.web.app)**
+🔗 **Demo en vivo:** [https://uplanner.web.app](https://uplanner.web.app)
 
 ---
 
 ## 🚀 Características Principales
 
-Esta aplicación resuelve el caos de la vida universitaria con herramientas integradas:
+### 📊 Dashboard Académico
+Panel de control centralizado con estadísticas en tiempo real:
+- **Promedio General:** Cálculo automático basado en tus notas finales.
+- **Progreso de Carrera:** Visualización del porcentaje de materias aprobadas vs. total.
+- **Estado Actual:** Detección inteligente de si estás en "Modo Vacaciones" o cursando actualmente.
+- **Próximos Vencimientos:** Alertas de entregas o exámenes cercanos.
 
-* **📊 Dashboard Académico:** Visualiza tu progreso, promedio y materias aprobadas/pendientes.
-* **📅 Agenda Inteligente:** Integración directa con **Google Calendar** para recordatorios de exámenes y entregas.
-* **📱 Modo PWA (App Instalable):** Instálala en tu celular (Android/iOS) o PC para acceder sin navegador.
-* **🔗 Sistema de Correlativas:** Controla qué materias puedes cursar según tu plan de estudios.
-* **⏰ Pomodoro Timer:** Herramienta de estudio integrada para mantener la concentración.
-* **💾 Respaldo de Datos:** Exporta e importa tu progreso en formato JSON (Backup local).
-* **🌗 Modo Oscuro/Claro:** Interfaz adaptable para estudiar de día o de noche.
-* **☁️ Sincronización en la Nube:** Tus datos se guardan en Firebase y son accesibles desde cualquier dispositivo.
+### 📅 Sistema de Horarios Inteligente
+- **Grilla Interactiva:** Visualización semanal de clases con detección de superposiciones.
+- **Tarjeta "En Vivo":** El dashboard te muestra automáticamente qué materia estás cursando ahora o cuál es la siguiente, filtrando las que ya terminaron en el día.
+- **Personalización:** Asignación de colores, aulas y comisiones por materia.
+
+### 🔗 Mapa de Correlativas (Graph View)
+- Visualización de nodos interconectados para entender el plan de estudios.
+- **Semáforo Académico:**
+  - 🟢 **Habilitada:** Materias que puedes cursar (correlativas cumplidas).
+  - 🔴 **Bloqueada:** Materias que aún no puedes cursar.
+  - ✅ **Aprobada:** Materias ya finalizadas.
+
+### 🏆 Gestión de Electivas y Metas
+- Sistema de "créditos" gamificado.
+- Configuración de metas personalizadas (ej: "Juntar 20 créditos para el título intermedio").
+- Barras de progreso dinámicas para cada objetivo.
+
+### 📱 PWA (Progressive Web App)
+- **Instalable:** Funciona como una app nativa en Android/iOS.
+- **Offline First:** Consulta tus datos básicos sin conexión.
+- **Modo Oscuro:** Interfaz adaptativa (Dark/Light mode) automática o manual.
 
 ---
 
-## 🛠️ Stack Tecnológico
+## 🛠️ Tecnologías Utilizadas
 
-El proyecto fue construido utilizando las últimas tecnologías de desarrollo web moderno:
+El proyecto fue construido utilizando un stack moderno y escalable:
 
-* **Frontend:** [React.js](https://react.dev/) + [Vite](https://vitejs.dev/)
-* **Estilos & UI:** [Tailwind CSS](https://tailwindcss.com/) + [NextUI](https://nextui.org/)
-* **Iconos:** [Lucide React](https://lucide.dev/)
-* **Base de Datos & Auth:** [Firebase](https://firebase.google.com/) (Firestore, Authentication, Hosting)
-* **Manejo de Estado:** [Zustand](https://github.com/pmndrs/zustand)
-* **Manejo de Fechas:** [date-fns](https://date-fns.org/)
+- **Frontend:** [React](https://reactjs.org/) + [Vite](https://vitejs.dev/)
+- **Lenguaje:** JavaScript (ES6+)
+- **Estilos & UI:** [Tailwind CSS](https://tailwindcss.com/) + [NextUI](https://nextui.org/)
+- **Iconografía:** [Lucide React](https://lucide.dev/)
+- **Backend & Auth:** [Firebase](https://firebase.google.com/) (Firestore, Authentication, Hosting)
+- **Gestión de Estado:** [Zustand](https://github.com/pmndrs/zustand)
+- **Fechas:** [Date-fns](https://date-fns.org/)
+- **Visualización de Grafos:** [React Flow](https://reactflow.dev/)
+- **Notificaciones:** [Sonner](https://sonner.emilkowal.ski/)
 
 ---
+
+## 👨‍💻 Autor
+
+Desarrollado por **Bruno Giraudo**.
+Estudiante de Ingeniería en Sistemas.
+
+---
+
+*Uplanner © 2025 - Todos los derechos reservados.*
