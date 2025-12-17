@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "gestor-universitario-v2"
-  }
+  },
+  "targets": {
+    "gestor-universitario-v2": {
+      "hosting": {
+        "app-oficial": [
+          "uplanner"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

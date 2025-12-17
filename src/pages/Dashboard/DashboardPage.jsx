@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button, Card, CardBody, Progress, Divider, Spinner, Chip } from "@nextui-org/react";
 import { 
   Trophy, TrendingUp, ChevronRight, Network, School, 
@@ -19,19 +19,28 @@ const DashboardPage = ({ userData }) => {
   const navigate = useNavigate();
   const { user } = useUserStore();
   
-  // Traemos TODOS los datos
+  // Estado para forzar la actualización del tiempo cada minuto
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    // Actualizamos la variable 'now' cada 30 segundos para ser precisos
+    const timer = setInterval(() => {
+        setNow(new Date());
+    }, 30000);
+    return () => clearInterval(timer);
+  }, []);
+  
+  // Datos
   const { materias, loading: loadingPlan } = useMaterias();
   const { electivas, configMetas, loading: loadingElectivas } = useElectivas();
   const { todos, loading: loadingAgenda } = useTodos();
   const { horarios, loading: loadingHorarios } = useHorarios();
 
-  // --- LÓGICA ESTADÍSTICAS ---
   const stats = useMemo(() => {
-    // 1. PROMEDIO Y AVANCE
+    // 1. PROMEDIO
     const totalMaterias = materias.length;
     const aprobadasPlan = materias.filter(m => m.estado === "Aprobada");
     const materiasFaltantes = totalMaterias - aprobadasPlan.length;
-    
     const conNota = aprobadasPlan.filter(m => m.nota && !isNaN(parseFloat(m.nota)));
     const sumaNotas = conNota.reduce((acc, curr) => acc + parseFloat(curr.nota), 0);
     const promedio = conNota.length > 0 ? (sumaNotas / conNota.length).toFixed(2) : "-";
@@ -49,10 +58,9 @@ const DashboardPage = ({ userData }) => {
         };
     });
 
-    // 3. METAS (Electivas)
+    // 3. METAS
     const aprobadasElectivas = electivas.filter(e => e.estado === "Aprobada");
     const metasSafe = Array.isArray(configMetas.metas) ? configMetas.metas : [];
-    
     const metasStats = metasSafe.map(meta => {
         const objetivo = meta.creditos || 1;
         const creditosAcumuladosMeta = aprobadasElectivas.reduce((acc, curr) => {
@@ -63,20 +71,33 @@ const DashboardPage = ({ userData }) => {
         return { ...meta, creditosAcumulados: creditosAcumuladosMeta, porcentaje };
     });
 
-    // 4. PRÓXIMO EVENTO (Agenda)
+    // 4. AGENDA
     const pendientes = todos.filter(t => !t.completado).sort((a,b) => a.fechaEntrega.localeCompare(b.fechaEntrega));
     const proximoEvento = pendientes.length > 0 ? pendientes[0] : null;
 
-    // 5. PRÓXIMA CLASE (Horarios)
-    // Lógica simple: Si no hay horarios -> Vacaciones. Si hay, buscamos hoy.
+    // 5. HORARIOS (Lógica arreglada con actualización en tiempo real)
     const modoVacaciones = horarios.length === 0;
-    const hoyDiaNombre = new Date().toLocaleDateString('es-ES', { weekday: 'long' }); // "lunes", "martes"...
+    const hoyDiaNombre = now.toLocaleDateString('es-ES', { weekday: 'long' });
+    const horaActual = now.getHours();
+    const minutosActuales = now.getMinutes();
     
-    // Normalizamos para comparar (quitar tildes y minusculas)
     const normalizar = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
     
     const clasesHoy = horarios
-        .filter(h => normalizar(h.dia) === normalizar(hoyDiaNombre))
+        .filter(h => {
+            const esHoy = normalizar(h.dia) === normalizar(hoyDiaNombre);
+            if (!esHoy) return false;
+
+            // Parsear Hora Fin
+            const horaFin = parseInt(h.fin.split(":")[0]); 
+            const minFin = parseInt(h.fin.split(":")[1] || "0");
+            
+            // Lógica estricta: La clase se muestra SOLO si NO ha terminado.
+            if (horaFin > horaActual) return true;
+            if (horaFin === horaActual && minFin > minutosActuales) return true;
+            
+            return false;
+        })
         .sort((a,b) => a.inicio.localeCompare(b.inicio));
 
     return { 
@@ -86,13 +107,12 @@ const DashboardPage = ({ userData }) => {
         modoVacaciones,
         clasesHoy
     };
-  }, [materias, electivas, configMetas, todos, horarios]);
+  }, [materias, electivas, configMetas, todos, horarios, now]); // <--- Agregamos 'now' a las dependencias
 
   if (loadingPlan || loadingElectivas || loadingAgenda || loadingHorarios) {
     return <div className="h-screen flex items-center justify-center"><Spinner size="lg" label="Sincronizando..." color="primary"/></div>;
   }
 
-  // --- RENDERIZADO DEL DASHBOARD ---
   return (
     <div className="p-4 md:p-8 max-w-[1600px] mx-auto">
         <header className="mb-8 mt-2 md:mt-0">
@@ -105,7 +125,7 @@ const DashboardPage = ({ userData }) => {
         {/* KPI CARDS */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             
-            {/* 1. PROMEDIO */}
+            {/* Promedio */}
             <Card className="bg-gradient-to-br from-yellow-500 to-orange-600 border-none shadow-xl shadow-orange-500/20 text-white">
                 <CardBody className="p-6">
                     <div className="flex justify-between items-start">
@@ -119,7 +139,7 @@ const DashboardPage = ({ userData }) => {
                 </CardBody>
             </Card>
             
-            {/* 2. AVANCE */}
+            {/* Avance */}
             <Card className="bg-content1 border border-default-200 shadow-sm">
                 <CardBody className="p-6">
                     <div className="flex justify-between items-start">
@@ -136,7 +156,7 @@ const DashboardPage = ({ userData }) => {
                 </CardBody>
             </Card>
 
-            {/* 3. AGENDA (PRÓXIMO EVENTO) */}
+            {/* Agenda */}
             <Card className="bg-content1 border border-default-200 shadow-sm cursor-pointer" onPress={() => navigate("/agenda")} isPressable>
                 <CardBody className="p-6">
                     <div className="flex justify-between items-start mb-2">
@@ -166,10 +186,8 @@ const DashboardPage = ({ userData }) => {
             </Card>
         </div>
 
-        {/* MIDDLE ROW (CORRELATIVAS + HORARIO) */}
+        {/* MIDDLE ROW */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            
-            {/* IZQUIERDA: CORRELATIVAS (Ancho 2/3) */}
             <div className="lg:col-span-2">
                 <Card className="bg-gradient-to-r from-gray-900 to-gray-800 border border-white/10 text-white h-full shadow-lg">
                     <CardBody className="flex flex-col sm:flex-row items-center justify-between p-8 gap-4 text-center sm:text-left">
@@ -193,11 +211,10 @@ const DashboardPage = ({ userData }) => {
                 </Card>
             </div>
 
-            {/* DERECHA: PRÓXIMA CLASE (Ancho 1/3) */}
+            {/* PRÓXIMA CLASE */}
             <div className="lg:col-span-1">
                 <Card className="h-full border border-default-200 bg-content1">
                     <CardBody className="p-5 flex flex-col justify-center items-center text-center relative overflow-hidden">
-                        {/* DECORACIÓN DE FONDO */}
                         <div className={`absolute top-0 w-full h-1 ${stats.modoVacaciones ? "bg-warning" : "bg-primary"}`}></div>
 
                         {stats.modoVacaciones ? (
@@ -219,21 +236,29 @@ const DashboardPage = ({ userData }) => {
                                     <div className="w-full">
                                         <div className="flex items-center gap-2 justify-center mb-3 text-primary">
                                             <School size={20}/>
-                                            <span className="font-bold uppercase text-xs">Cursas Hoy</span>
+                                            <span className="font-bold uppercase text-xs">
+                                                {/* Lógica de título: Si empieza antes de ahora, es "Actual", sino "Siguiente" */}
+                                                {parseInt(stats.clasesHoy[0].inicio.split(":")[0]) <= now.getHours() 
+                                                    ? "Cursando Ahora" 
+                                                    : "Siguiente Clase"}
+                                            </span>
                                         </div>
-                                        {/* Solo mostramos la primera del día o un resumen */}
+                                        
                                         <h3 className="text-lg font-bold truncate mb-1">{stats.clasesHoy[0].materia}</h3>
+                                        
                                         <Chip size="sm" variant="flat" color="primary" className="mb-2">
                                             {stats.clasesHoy[0].inicio} - {stats.clasesHoy[0].fin}
                                         </Chip>
+                                        
                                         {stats.clasesHoy[0].aula && (
                                             <div className="flex items-center justify-center gap-1 text-xs text-default-400">
                                                 <MapPin size={12}/> Aula {stats.clasesHoy[0].aula}
                                             </div>
                                         )}
+                                        
                                         {stats.clasesHoy.length > 1 && (
                                             <p className="text-xs text-default-400 mt-3 border-t border-divider pt-2">
-                                                + {stats.clasesHoy.length - 1} materias más hoy
+                                                + {stats.clasesHoy.length - 1} clases más después
                                             </p>
                                         )}
                                     </div>
@@ -242,8 +267,8 @@ const DashboardPage = ({ userData }) => {
                                         <div className="bg-default-100 p-4 rounded-full mb-3">
                                             <CalendarRange size={32} className="text-default-500"/>
                                         </div>
-                                        <h4 className="text-lg font-bold">Día Libre</h4>
-                                        <p className="text-sm text-default-400">Hoy no tienes cursada.</p>
+                                        <h4 className="text-lg font-bold">¡Día Terminado!</h4>
+                                        <p className="text-sm text-default-400">No tienes más clases por hoy.</p>
                                         <Button size="sm" variant="light" className="mt-2" onPress={() => navigate("/horarios")}>Ver semana</Button>
                                     </>
                                 )}
@@ -254,10 +279,9 @@ const DashboardPage = ({ userData }) => {
             </div>
         </div>
 
-        {/* BOTTOM ROW (METAS + PROGRESO) */}
+        {/* BOTTOM ROW */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            
-            {/* 1. METAS DE TÍTULOS (Detalle de créditos) */}
+            {/* Metas */}
             <Card className="p-2 h-full border border-default-200">
                 <CardBody>
                     <div className="flex justify-between items-center mb-6">
@@ -277,13 +301,7 @@ const DashboardPage = ({ userData }) => {
                                             {meta.creditosAcumulados} / {meta.creditos} Créditos
                                         </Chip>
                                     </div>
-                                    <Progress 
-                                        size="md" 
-                                        value={meta.porcentaje} 
-                                        color={meta.porcentaje === 100 ? "success" : "secondary"} 
-                                        showValueLabel={true}
-                                        className="max-w-full"
-                                    />
+                                    <Progress size="md" value={meta.porcentaje} color={meta.porcentaje === 100 ? "success" : "secondary"} showValueLabel={true} className="max-w-full"/>
                                 </div>
                             ))
                         ) : (
@@ -296,7 +314,7 @@ const DashboardPage = ({ userData }) => {
                 </CardBody>
             </Card>
 
-            {/* 2. AVANCE POR AÑO */}
+            {/* Avance por Año */}
             <Card className="p-2 h-full border border-default-200">
                 <CardBody>
                     <div className="flex justify-between items-center mb-6">
@@ -313,12 +331,7 @@ const DashboardPage = ({ userData }) => {
                                     <span className="text-small font-bold text-default-500">AÑO {nivel.nivel}</span>
                                 </div>
                                 <div className="flex-1">
-                                    <Progress 
-                                        size="sm" 
-                                        value={nivel.porcentaje} 
-                                        color={nivel.porcentaje === 100 ? "success" : "primary"} 
-                                        className="max-w-full"
-                                    />
+                                    <Progress size="sm" value={nivel.porcentaje} color={nivel.porcentaje === 100 ? "success" : "primary"} className="max-w-full"/>
                                 </div>
                                 <div className="w-12 text-right">
                                     <span className="text-small font-bold">{Math.round(nivel.porcentaje)}%</span>
@@ -337,7 +350,6 @@ const DashboardPage = ({ userData }) => {
                     </div>
                 </CardBody>
             </Card>
-
         </div>
     </div>
   );

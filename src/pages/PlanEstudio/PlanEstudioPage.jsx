@@ -62,7 +62,7 @@ const PlanEstudioPage = () => {
       </Button>
 
       {/* Header Principal con Estadísticas Integradas */}
-      <div className="flex flex-col lg:flex-row gap-6 items-end justify-between mb-8">
+      <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-end justify-between mb-8">
         <div className="flex items-center gap-4">
             <div className="p-4 bg-gradient-to-tr from-blue-600 to-cyan-500 rounded-2xl shadow-lg shadow-blue-500/20">
                 <GraduationCap className="text-white" size={32} />

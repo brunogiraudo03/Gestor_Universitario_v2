@@ -1,68 +1,74 @@
 import { useState, useEffect } from "react";
 import { 
-  collection, doc, onSnapshot, query, orderBy, writeBatch, updateDoc, deleteDoc, getDocs 
+  collection, query, getDocs, addDoc, deleteDoc, updateDoc, doc 
 } from "firebase/firestore";
-import { db } from "../config/firebase";
-import useUserStore from "../stores/useUserStore";
+import { db, auth } from "../config/firebase";
+import { toast } from "sonner";
 
 export const useHorarios = () => {
-  const { user } = useUserStore();
   const [horarios, setHorarios] = useState([]);
   const [loading, setLoading] = useState(true);
+  const user = auth.currentUser;
 
-  const horariosRef = user ? collection(db, "usuarios", user.uid, "horarios") : null;
+  const fetchHorarios = async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const q = query(collection(db, "usuarios", user.uid, "horarios"));
+      const querySnapshot = await getDocs(q);
+      const data = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setHorarios(data);
+    } catch (error) {
+      console.error(error);
+      toast.error("Error al cargar horarios");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (!user || !horariosRef) {
-        setHorarios([]);
-        setLoading(false);
-        return;
-    }
-
-    const q = query(horariosRef, orderBy("inicio", "asc"));
-    
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      setHorarios(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-      setLoading(false);
-    });
-    return () => unsubscribe();
+    fetchHorarios();
   }, [user]);
 
-  // 1. CREAR (Masivo)
-  const agregarClaseCompleta = async (datosMateria, listaHorarios) => {
-    if (!datosMateria.materia || listaHorarios.length === 0) return;
-    const batch = writeBatch(db);
-    listaHorarios.forEach(horario => {
-        const docRef = doc(collection(db, "usuarios", user.uid, "horarios"));
-        batch.set(docRef, {
-            ...datosMateria,
-            ...horario,
-            createdAt: new Date().toISOString()
-        });
-    });
-    await batch.commit();
+  // Agregar
+  const agregarHorario = async (nuevoHorario) => {
+    try {
+      await addDoc(collection(db, "usuarios", user.uid, "horarios"), nuevoHorario);
+      toast.success("Clase agregada al horario");
+      fetchHorarios();
+    } catch (error) {
+      console.error(error);
+      toast.error("Error al guardar");
+    }
   };
 
-  // 2. EDITAR (Individual)
-  const editarHorario = async (id, datos) => {
-    if (!id || !horariosRef) return;
-    await updateDoc(doc(db, "usuarios", user.uid, "horarios", id), datos);
-  };
-
-  // 3. BORRAR (Individual)
+  // Borrar
   const borrarHorario = async (id) => {
-    if (!id || !horariosRef) return;
-    await deleteDoc(doc(db, "usuarios", user.uid, "horarios", id));
+    try {
+      await deleteDoc(doc(db, "usuarios", user.uid, "horarios", id));
+      toast.success("Clase eliminada");
+      fetchHorarios();
+    } catch (error) {
+      console.error(error);
+      toast.error("Error al eliminar");
+    }
   };
 
-  // 4. LIMPIAR TODO
-  const limpiarHorarios = async () => {
-    if (!horariosRef) return;
-    const snapshot = await getDocs(horariosRef);
-    const batch = writeBatch(db);
-    snapshot.docs.forEach((doc) => batch.delete(doc.ref));
-    await batch.commit();
+  // Editar
+  const editarHorario = async (id, datosActualizados) => {
+    try {
+      const docRef = doc(db, "usuarios", user.uid, "horarios", id);
+      await updateDoc(docRef, datosActualizados);
+      toast.success("Horario actualizado");
+      fetchHorarios();
+    } catch (error) {
+      console.error(error);
+      toast.error("Error al actualizar");
+    }
   };
 
-  return { horarios, loading, agregarClaseCompleta, editarHorario, borrarHorario, limpiarHorarios };
+  return { horarios, loading, agregarHorario, borrarHorario, editarHorario };
 };

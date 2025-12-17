@@ -22,38 +22,23 @@ const ElectivasPage = () => {
     }
   }, [loading, configMetas]);
 
-  // CÁLCULO DINÁMICO DE PROGRESO (CORREGIDO)
+  // CÁLCULO DINÁMICO DE PROGRESO
   const stats = useMemo(() => {
-    // Filtramos solo las aprobadas
     const aprobadas = electivas.filter(e => e.estado === "Aprobada");
-    
-    // Total global (suma bruta de todo lo aprobado, solo informativo)
     const totalCreditosGlobal = aprobadas.reduce((acc, curr) => acc + (curr.creditos || 0), 0);
-    
     const metasSafe = Array.isArray(configMetas.metas) ? configMetas.metas : [];
 
     const metasStats = metasSafe.map(meta => {
         const objetivo = meta.creditos || 1;
-        
-        // CÁLCULO ESPECÍFICO POR META
-        // Sumamos los créditos SOLO si la materia está asignada a esta meta
         const creditosAcumuladosMeta = aprobadas.reduce((acc, curr) => {
-            // Si la materia tiene el campo metasIds, verificamos si incluye el ID de esta meta
-            // Si no tiene metasIds (datos viejos), asumimos que cuenta para todo (comportamiento por defecto)
             const aplicaAMeta = curr.metasIds 
                 ? curr.metasIds.includes(String(meta.id)) 
                 : true; 
-            
             return aplicaAMeta ? acc + (curr.creditos || 0) : acc;
         }, 0);
 
         const porcentaje = Math.min((creditosAcumuladosMeta / objetivo) * 100, 100);
-        
-        return { 
-            ...meta, 
-            creditosAcumulados: creditosAcumuladosMeta, // Usamos este valor real para la barra
-            porcentaje 
-        };
+        return { ...meta, creditosAcumulados: creditosAcumuladosMeta, porcentaje };
     });
 
     return { totalCreditosGlobal, metasStats };
@@ -73,41 +58,52 @@ const ElectivasPage = () => {
   return (
     <div className="p-4 md:p-8 max-w-[1400px] mx-auto min-h-screen">
       
-      <div className="flex justify-between items-center mb-4">
+      {/* Botones superiores */}
+      <div className="flex justify-between items-center mb-6">
         <Button variant="light" startContent={<ChevronLeft/>} onPress={() => navigate("/")} className="pl-0 text-default-500">
             Volver
         </Button>
-        <Button variant="flat" size="sm" startContent={<Settings2 size={16}/>} onPress={() => setConfigOpen(true)}>
-            Configurar Metas
-        </Button>
+        <div className="flex gap-2">
+            <Button variant="flat" size="sm" startContent={<Settings2 size={16}/>} onPress={() => setConfigOpen(true)}>
+                Configurar Metas
+            </Button>
+            <Button onPress={() => {setMateriaAEditar(null); onOpen();}} color="primary" size="sm" endContent={<Plus size={16}/>} className="font-bold">
+                Nueva
+            </Button>
+        </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-6 items-end justify-between mb-8">
-        <div className="flex items-center gap-4">
-            <div className="p-4 bg-gradient-to-tr from-purple-600 to-pink-500 rounded-2xl shadow-lg shadow-purple-500/20">
+      {/* HEADER PRINCIPAL */}
+      {/* CAMBIO: items-start para que el título quede arriba, paralelo al contenido */}
+      <div className="flex flex-col lg:flex-row gap-6 items-start justify-between mb-8">
+        
+        {/* Título e Icono */}
+        <div className="flex items-start gap-4">
+            <div className="p-4 bg-gradient-to-tr from-purple-600 to-pink-500 rounded-2xl shadow-lg shadow-purple-500/20 mt-1">
                 <BookOpen className="text-white" size={32} />
             </div>
             <div>
-                <h1 className="text-3xl font-bold">Electivas</h1>
-                <p className="text-default-500">Gestión de créditos flexible</p>
+                <h1 className="text-3xl font-bold mt-1">Electivas</h1>
+                <p className="text-default-500 max-w-sm">
+                    Gestión de créditos flexible para cumplir tus objetivos académicos.
+                </p>
             </div>
         </div>
 
-        {/* --- TARJETA DE PROGRESO DINÁMICA --- */}
+        {/* TARJETA DE PROGRESO DINÁMICA */}
         <Card className="w-full lg:w-[450px] bg-content1 border border-default-100 shadow-sm">
             <CardBody className="py-4 px-5">
-                <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center gap-2 mb-4 border-b border-default-100 pb-2">
                     <Coins className="text-warning" size={20}/>
-                    <span className="text-xl font-bold">{stats.totalCreditosGlobal} Créditos Totales</span>
+                    <span className="text-lg font-bold">{stats.totalCreditosGlobal} Créditos Totales</span>
                 </div>
 
-                <div className="space-y-4 max-h-[150px] overflow-y-auto pr-1">
+                <div className="space-y-4 max-h-[200px] overflow-y-auto pr-1">
                     {stats.metasStats.map((meta, idx) => (
                         <div key={meta.id || idx}>
                             <div className="flex justify-between text-small mb-1">
-                                <span className="text-default-500 font-medium">{meta.nombre}</span>
-                                <span className={meta.porcentaje === 100 ? "font-bold text-success" : "font-bold text-primary"}>
-                                    {/* AQUI MOSTRAMOS LO REAL ACUMULADO PARA ESTA META */}
+                                <span className="text-default-500 font-medium truncate pr-2">{meta.nombre}</span>
+                                <span className={meta.porcentaje === 100 ? "font-bold text-success whitespace-nowrap" : "font-bold text-primary whitespace-nowrap"}>
                                     {meta.creditosAcumulados} / {meta.creditos}
                                 </span>
                             </div>
@@ -123,10 +119,6 @@ const ElectivasPage = () => {
                 </div>
             </CardBody>
         </Card>
-
-        <Button onPress={() => {setMateriaAEditar(null); onOpen();}} color="primary" variant="shadow" endContent={<Plus />} size="lg" className="w-full lg:w-auto">
-          Nueva Electiva
-        </Button>
       </div>
 
       <ElectivasTable 
@@ -140,7 +132,6 @@ const ElectivasPage = () => {
         onClose={onOpenChange} 
         onSubmit={handleGuardar} 
         initialData={materiaAEditar}
-        // Pasamos las metas disponibles al formulario
         availableMetas={configMetas.metas || []} 
       />
 

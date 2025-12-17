@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 export const usePWA = () => {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -6,42 +6,60 @@ export const usePWA = () => {
   const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
-    // 1. Detectar si ya está instalada (Modo Standalone)
-    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+    // 1. Detectar si ya está en modo App (Standalone)
+    if (window.matchMedia("(display-mode: standalone)").matches) {
       setIsInstalled(true);
+      setIsInstallable(false);
     }
 
-    // 2. Escuchar el evento de instalación del navegador
-    const handler = (e) => {
+    // 2. Escuchar el evento mágico de Chrome
+    const handleBeforeInstallPrompt = (e) => {
+      // IMPORTANTE: Prevenir que Chrome muestre su barra automática abajo
+      // para que nosotros tengamos el control con nuestro botón.
       e.preventDefault();
+      
+      // Guardamos el evento para usarlo después
       setDeferredPrompt(e);
+      
+      // Avisamos a la UI que muestre el botón
       setIsInstallable(true);
+      console.log("Evento de instalación capturado exitosamente");
     };
 
-    window.addEventListener('beforeinstallprompt', handler);
-
-    // 3. Detectar si se instaló exitosamente en este momento
-    const appInstalledHandler = () => {
+    // 3. Detectar cuando se instaló exitosamente
+    const handleAppInstalled = () => {
+      console.log("App instalada");
       setIsInstalled(true);
       setIsInstallable(false);
       setDeferredPrompt(null);
     };
-    window.addEventListener('appinstalled', appInstalledHandler);
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    window.addEventListener("appinstalled", handleAppInstalled);
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handler);
-      window.removeEventListener('appinstalled', appInstalledHandler);
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      window.removeEventListener("appinstalled", handleAppInstalled);
     };
   }, []);
 
   const installApp = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-      setDeferredPrompt(null);
-      setIsInstallable(false);
+    if (!deferredPrompt) {
+      console.error("No hay prompt de instalación guardado. Posiblemente ya instalado o bloqueado por el navegador.");
+      return;
     }
+
+    // Disparamos el prompt nativo
+    deferredPrompt.prompt();
+
+    // Esperamos la respuesta del usuario
+    const { outcome } = await deferredPrompt.userChoice;
+    
+    console.log(`Usuario respondió: ${outcome}`);
+
+    // Limpiamos la variable (solo sirve una vez)
+    setDeferredPrompt(null);
+    setIsInstallable(false);
   };
 
   return { isInstallable, isInstalled, installApp };

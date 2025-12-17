@@ -12,8 +12,8 @@ export default defineConfig({
         name: 'Uplanner',
         short_name: 'Uplanner',
         description: 'Organiza tu carrera universitaria',
-        theme_color: '#000000ff',
-        background_color: '#000000ff',
+        theme_color: '#000000', 
+        background_color: '#000000', 
         display: 'standalone',
         orientation: 'portrait',
         icons: [
@@ -21,7 +21,7 @@ export default defineConfig({
             src: 'pwa-192x192.png',
             sizes: '192x192',
             type: 'image/png',
-            purpose: 'any maskable' // <--- ESTO + FONDO SÓLIDO = PERFECCIÓN
+            purpose: 'any maskable'
           },
           {
             src: 'pwa-512x512.png',

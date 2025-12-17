@@ -1,103 +1,81 @@
-import { 
-  Button, useDisclosure, Spinner, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter 
-} from "@nextui-org/react";
-import { 
-  ChevronLeft, Plus, CalendarRange, Eraser, Trash2 
-} from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Button, useDisclosure, Spinner } from "@nextui-org/react";
+import { Plus, CalendarClock } from "lucide-react";
 import { useHorarios } from "../../hooks/useHorarios";
 import HorariosGrid from "./components/HorariosGrid";
 import HorariosForm from "./components/HorariosForm";
 
 const HorariosPage = () => {
-  const navigate = useNavigate();
-  const { horarios, loading, agregarClaseCompleta, limpiarHorarios } = useHorarios();
-  
+  const { horarios, loading, agregarHorario, borrarHorario, editarHorario } = useHorarios();
   const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
-  const { isOpen: isCleanOpen, onOpen: onCleanOpen, onOpenChange: onCleanOpenChange, onClose: onCleanClose } = useDisclosure();
+  
+  // Estado para saber qué estamos editando (null = nuevo)
+  const [editingItem, setEditingItem] = useState(null);
 
+  // Abrir modal para CREAR
   const handleOpenCreate = () => {
+    setEditingItem(null);
     onOpen();
   };
 
-  const handleSubmit = async (formData) => {
-    await agregarClaseCompleta(
-        { 
-            materia: formData.materia, 
-            comision: formData.comision, 
-            color: formData.color 
-        }, 
-        formData.horarios
-    );
+  // Abrir modal para EDITAR (viene del Grid)
+  const handleOpenEdit = (item) => {
+    setEditingItem(item);
+    onOpen();
+  };
+
+  // Guardar (crear o editar según corresponda)
+  const handleSave = async (data) => {
+    if (editingItem) {
+        await editarHorario(editingItem.id, data);
+    } else {
+        await agregarHorario(data);
+    }
     onClose();
   };
 
-  const handleLimpiarTodo = async () => {
-    await limpiarHorarios();
-    onCleanClose();
+  const handleDelete = async (id) => {
+    if (confirm("¿Seguro que quieres borrar esta clase del horario?")) {
+        await borrarHorario(id);
+    }
   };
 
-  if (loading) return <div className="h-screen flex items-center justify-center"><Spinner size="lg" label="Cargando cronograma..." color="primary"/></div>;
+  if (loading) return <div className="flex justify-center p-10"><Spinner size="lg" /></div>;
 
   return (
-    <div className="p-4 md:p-8 max-w-[1600px] mx-auto min-h-screen flex flex-col">
+    <div className="p-4 md:p-8 max-w-[1400px] mx-auto min-h-screen">
       
-      <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-        <div className="flex items-center gap-4 self-start">
-            <Button variant="light" isIconOnly onPress={() => navigate("/")}><ChevronLeft className="text-default-500"/></Button>
-            <div className="p-3 bg-gradient-to-br from-pink-500 to-rose-600 rounded-xl shadow-lg shadow-pink-500/20">
-                <CalendarRange className="text-white" size={28} />
+      {/* HEADER */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <div className="flex items-center gap-3">
+            <div className="p-4 bg-gradient-to-tr from-orange-500 to-red-500 rounded-2xl shadow-lg shadow-orange-500/20">
+                <CalendarClock className="text-white" size={32} />
             </div>
             <div>
-                <h1 className="text-3xl font-bold">Mis Horarios</h1>
-                <p className="text-default-500">Cronograma semanal de clases.</p>
+                <h1 className="text-2xl font-bold">Horarios de Cursada</h1>
+                <p className="text-default-500">Organiza tu semana</p>
             </div>
         </div>
         
-        <div className="flex gap-3">
-            {horarios.length > 0 && (
-                <Button color="danger" variant="flat" startContent={<Eraser size={18}/>} onPress={onCleanOpen}>
-                    Limpiar Todo
-                </Button>
-            )}
-            <Button color="primary" variant="shadow" endContent={<Plus/>} onPress={handleOpenCreate}>
-                Agregar Materia
-            </Button>
-        </div>
+        <Button onPress={handleOpenCreate} color="primary" endContent={<Plus />}>
+          Agregar Clase
+        </Button>
       </div>
 
+      {/* GRID */}
       <HorariosGrid 
         horarios={horarios} 
-        // No pasamos onEdit ni onDelete para que sea solo lectura
+        onEdit={handleOpenEdit} 
+        onDelete={handleDelete} 
       />
 
+      {/* MODAL (FORM) */}
       <HorariosForm 
         isOpen={isOpen} 
         onClose={onOpenChange} 
-        onSubmit={handleSubmit} 
+        onSubmit={handleSave}
+        initialData={editingItem} 
       />
-
-      {/* MODAL LIMPIAR TODO */}
-      <Modal isOpen={isCleanOpen} onOpenChange={onCleanClose} backdrop="blur" size="sm">
-        <ModalContent>
-            {(onClose) => (
-                <>
-                    <ModalHeader className="text-danger flex items-center gap-2">
-                        <Trash2 /> Borrar Cronograma
-                    </ModalHeader>
-                    <ModalBody>
-                        <p>¿Estás seguro de que quieres eliminar <b>TODOS</b> los horarios?</p>
-                        <p className="text-xs text-default-500">Esta acción no se puede deshacer.</p>
-                    </ModalBody>
-                    <ModalFooter>
-                        <Button variant="light" onPress={onClose}>Cancelar</Button>
-                        <Button color="danger" onPress={handleLimpiarTodo}>Sí, borrar todo</Button>
-                    </ModalFooter>
-                </>
-            )}
-        </ModalContent>
-      </Modal>
-
     </div>
   );
 };
