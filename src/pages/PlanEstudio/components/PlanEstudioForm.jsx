@@ -61,8 +61,8 @@ const PlanEstudioForm = ({ isOpen, onClose, onSubmit, initialData }) => {
       nivel: isNaN(nivelInt) ? 1 : nivelInt, 
       numero: isNaN(numeroInt) ? 0 : numeroInt,
       nota: isNaN(notaFloat) ? "" : notaFloat,
-      correlativasRegular: cRegular,   // <--- Aquí aplicamos el guion
-      correlativasAprobada: cAprobada  // <--- Aquí aplicamos el guion
+      correlativasRegular: cRegular,   
+      correlativasAprobada: cAprobada  
     };
 
     onSubmit(payload);

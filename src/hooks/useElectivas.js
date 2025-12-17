@@ -10,7 +10,6 @@ export const useElectivas = () => {
   const [electivas, setElectivas] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // ESTRUCTURA SEGURA POR DEFECTO
   const [configMetas, setConfigMetas] = useState({
     metas: [
         { id: 1, nombre: "Título Final", creditos: 0 } 
@@ -37,8 +36,6 @@ export const useElectivas = () => {
             const docSnap = await getDoc(configRef);
             if (docSnap.exists()) {
                 const data = docSnap.data();
-                
-                // MIGRACIÓN AUTOMÁTICA (Por si tenías la versión vieja)
                 if (!data.metas && data.meta1Nombre) {
                     setConfigMetas({
                         metas: [
@@ -51,7 +48,7 @@ export const useElectivas = () => {
                     // Carga normal
                     setConfigMetas({ 
                         ...data, 
-                        metas: data.metas || [], // Asegurar que sea array
+                        metas: data.metas || [], 
                         configurado: true 
                     });
                 }

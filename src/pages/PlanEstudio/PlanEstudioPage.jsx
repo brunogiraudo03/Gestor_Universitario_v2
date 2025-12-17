@@ -30,7 +30,6 @@ const PlanEstudioPage = () => {
 
     return { totalMaterias, totalAprobadas, porcentajeCarrera, promedio };
   }, [materias]);
-  // --------------------------------------
 
   const handleAbrirNuevo = () => {
     setMateriaAEditar(null);

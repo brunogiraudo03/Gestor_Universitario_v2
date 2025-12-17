@@ -6,7 +6,7 @@ import {
 import useUserStore from "../../stores/useUserStore";
 import { usePWA } from "../../hooks/usePWA";
 
-// Importamos los nuevos componentes
+
 import UserSection from "./components/UserSection";
 import DataSection from "./components/DataSection";
 

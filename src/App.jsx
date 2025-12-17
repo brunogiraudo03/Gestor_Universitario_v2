@@ -5,7 +5,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "./config/firebase";
 import useUserStore from "./stores/useUserStore";
 import { Spinner } from "@nextui-org/react";
-import { Toaster } from 'sonner'; // Notificaciones lindas
+import { Toaster } from 'sonner'; 
 
 // --- TUS PÁGINAS ---
 import LoginPage from "./pages/Auth/LoginPage";
@@ -23,17 +23,17 @@ import ConfigPage from "./pages/Config/ConfigPage";
 import Layout from "./components/Layout"; 
 
 function App() {
-  const { user, setUser } = useUserStore();
+  const { user, setUser, userData, setUserData } = useUserStore();
+  
   const [appLoading, setAppLoading] = useState(true);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
-  const [userData, setUserData] = useState(null); 
+  
 
   // 1. Efecto Inicial (Tema + Auth)
   useEffect(() => {
     
     // A. Lógica Anti-Flash del Tema Oscuro
     const savedTheme = localStorage.getItem("theme");
-    // Si es dark O si no hay nada (default dark)
     if (savedTheme === "dark" || !savedTheme) {
       document.documentElement.classList.add("dark");
     } else {
@@ -49,7 +49,7 @@ function App() {
 
         if (docSnap.exists() && docSnap.data().carrera) {
           // Usuario viejo (ya tiene carrera)
-          setUserData(docSnap.data());
+          setUserData(docSnap.data()); // <--- GUARDAMOS EN STORE GLOBAL
           setUser(currentUser);
           setNeedsOnboarding(false);
         } else {
@@ -60,13 +60,13 @@ function App() {
       } else {
         // No logueado
         setUser(null);
-        setUserData(null);
+        setUserData(null); 
       }
       setAppLoading(false);
     });
 
     return () => unsubscribe();
-  }, [setUser]);
+  }, [setUser, setUserData]); 
 
   const handleOnboardingComplete = () => {
     setNeedsOnboarding(false);

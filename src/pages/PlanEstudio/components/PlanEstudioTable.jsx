@@ -5,13 +5,12 @@ import {
 } from "@nextui-org/react";
 import { Trash2, Edit, AlertTriangle, CheckCircle2 } from "lucide-react";
 
-// Columnas más compactas
 const columns = [
   {name: "N°", uid: "numero"},
   {name: "ASIGNATURA", uid: "nombre"},
   {name: "MODALIDAD", uid: "modalidad"},
-  {name: "C. REG", uid: "correlativasRegular"}, // Nombre corto para achicar
-  {name: "C. APR", uid: "correlativasAprobada"}, // Nombre corto para achicar
+  {name: "C. REG", uid: "correlativasRegular"}, 
+  {name: "C. APR", uid: "correlativasAprobada"}, 
   {name: "ESTADO", uid: "estado"},
   {name: "NOTA", uid: "nota"},
   {name: "", uid: "actions"},

@@ -74,7 +74,6 @@ const ElectivasPage = () => {
       </div>
 
       {/* HEADER PRINCIPAL */}
-      {/* CAMBIO: items-start para que el título quede arriba, paralelo al contenido */}
       <div className="flex flex-col lg:flex-row gap-6 items-start justify-between mb-8">
         
         {/* Título e Icono */}

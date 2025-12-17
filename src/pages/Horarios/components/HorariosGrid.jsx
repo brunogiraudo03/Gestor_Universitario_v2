@@ -23,7 +23,7 @@ const HorarioItem = ({ clase, onEdit, onDelete }) => {
 
     if (duration <= 0) {
         duration = 1; 
-        isError = true; // Marcamos visualmente que hay un error
+        isError = true; 
     }
 
     // Altura: (4rem por hora) + (0.5rem de gap por hora extra)

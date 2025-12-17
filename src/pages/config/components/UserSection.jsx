@@ -3,7 +3,7 @@ import { Card, CardBody, Input, Button, User, Divider, Chip } from "@nextui-org/
 import { Save, GraduationCap, University, Calendar, User as UserIcon } from "lucide-react";
 import useUserStore from "../../../stores/useUserStore";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { updateProfile } from "firebase/auth"; // Importante para actualizar nombre
+import { updateProfile } from "firebase/auth"; 
 import { auth, db } from "../../../config/firebase";
 import { toast } from "sonner";
 
@@ -21,7 +21,7 @@ const UserSection = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       if (user) {
-        setNombre(user.displayName || ""); // Cargar nombre actual
+        setNombre(user.displayName || ""); 
         try {
             const docRef = doc(db, "usuarios", user.uid);
             const snap = await getDoc(docRef);

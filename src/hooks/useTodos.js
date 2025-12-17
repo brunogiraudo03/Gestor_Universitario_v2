@@ -29,7 +29,6 @@ export const useTodos = () => {
     return () => unsubscribe();
   }, [user]);
 
-  // AHORA ACEPTAMOS 'TIPO' y 'HORA'
   const agregarEvento = async (datos) => {
     /* datos = { 
         texto: "Parcial Física", 

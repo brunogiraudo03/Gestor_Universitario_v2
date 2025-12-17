@@ -20,7 +20,7 @@ const ElectivasForm = ({ isOpen, onClose, onSubmit, initialData, availableMetas 
     creditos: "", 
     correlativasRegular: "", correlativasAprobada: "",
     estado: "Pendiente", nota: "",
-    metasIds: [] // Array para guardar los IDs de las metas a las que aplica
+    metasIds: [] 
   };
 
   const [formData, setFormData] = useState(defaultValues);
@@ -35,7 +35,6 @@ const ElectivasForm = ({ isOpen, onClose, onSubmit, initialData, availableMetas 
             nota: String(initialData.nota || ""),
             correlativasRegular: initialData.correlativasRegular || "",
             correlativasAprobada: initialData.correlativasAprobada || "",
-            // Aseguramos que sea array y convertimos a strings para los checkboxes
             metasIds: (initialData.metasIds || []).map(String) 
         });
       } else {
@@ -65,7 +64,7 @@ const ElectivasForm = ({ isOpen, onClose, onSubmit, initialData, availableMetas 
       nota: isNaN(notaFloat) ? "" : notaFloat,
       correlativasRegular: cRegular,
       correlativasAprobada: cAprobada,
-      metasIds: formData.metasIds // Enviamos los IDs seleccionados
+      metasIds: formData.metasIds 
     };
 
     onSubmit(payload);
@@ -154,7 +153,7 @@ const ElectivasForm = ({ isOpen, onClose, onSubmit, initialData, availableMetas 
 
               <Divider className="my-2 bg-white/10"/>
 
-              {/* SECCIÓN DE METAS (NUEVO) */}
+              {/* SECCIÓN DE METAS */}
               <div className="bg-white/5 p-4 rounded-xl border border-white/10">
                 <div className="flex gap-2 items-center mb-2 text-default-500 text-sm font-bold uppercase">
                     <Target size={16} />

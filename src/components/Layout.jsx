@@ -32,7 +32,6 @@ const Layout = ({ children }) => {
                     </NavbarBrand>
                 </NavbarContent>
                 <NavbarContent justify="end">
-                    {/* Espacio vacío para equilibrar */}
                     <div className="w-8"></div> 
                 </NavbarContent>
             </Navbar>

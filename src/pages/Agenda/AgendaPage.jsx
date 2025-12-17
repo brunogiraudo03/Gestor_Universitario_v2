@@ -29,7 +29,7 @@ const AgendaPage = () => {
   
   // Estado del Calendario
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState(null); // Día clickeado
+  const [selectedDate, setSelectedDate] = useState(null); 
 
   // Estado del Modal
   const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
@@ -41,7 +41,7 @@ const AgendaPage = () => {
 
   // Generar los días a mostrar
   const daysInGrid = () => {
-    const start = startOfWeek(startOfMonth(currentDate), { weekStartsOn: 1 }); // Lunes
+    const start = startOfWeek(startOfMonth(currentDate), { weekStartsOn: 1 }); 
     const end = endOfWeek(endOfMonth(currentDate), { weekStartsOn: 1 });
     return eachDayOfInterval({ start, end });
   };
@@ -59,18 +59,14 @@ const AgendaPage = () => {
     onClose();
   };
 
-  // --- NUEVA FUNCIÓN CORREGIDA (SOLUCIÓN ZONA HORARIA) ---
   const handleAddToCalendar = (evento) => {
-    // 1. Hora de inicio (default 09:00 si no hay hora)
     const horaInicio = evento.hora || "09:00";
-    // Construimos la fecha localmente
     const fechaString = `${evento.fechaEntrega}T${horaInicio}:00`;
     const fechaDate = new Date(fechaString);
 
     // 2. Hora de fin (1 hora después)
     const fechaFinDate = new Date(fechaDate.getTime() + 60 * 60 * 1000);
 
-    // 3. Formateador MANUAL para forzar la hora local (evita conversión a UTC)
     // Devuelve formato: YYYYMMDDTHHMMSS
     const formatDateLocal = (date) => {
         const pad = (n) => n.toString().padStart(2, '0');

@@ -1,10 +1,16 @@
 import { create } from 'zustand';
 
 const useUserStore = create((set) => ({
-  user: null,
+  user: null,       
+  userData: null,   
   loading: true, 
-  setUser: (user) => set({ user, loading: false }),
-  clearUser: () => set({ user: null, loading: false }),
+  
+  // Acciones
+  setUser: (user) => set({ user }),
+  setUserData: (data) => set({ userData: data }), 
+  setLoading: (loading) => set({ loading }),
+  
+  clearUser: () => set({ user: null, userData: null, loading: false }),
 }));
 
 export default useUserStore;

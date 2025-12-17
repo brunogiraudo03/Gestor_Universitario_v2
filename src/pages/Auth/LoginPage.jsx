@@ -119,7 +119,7 @@ const LoginPage = () => {
 
     try {
         await sendPasswordResetEmail(auth, resetEmail);
-        setResetStatus("success"); // Cambia la vista del modal a Éxito
+        setResetStatus("success"); 
     } catch (e) {
         console.error(e);
         setResetStatus("error");

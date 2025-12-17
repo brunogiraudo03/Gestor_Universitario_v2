@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { 
-  Card, CardBody, CardHeader, Input, Button, DatePicker, Select, SelectItem 
+  Card, CardBody, CardHeader, Input, Button, DatePicker 
 } from "@nextui-org/react";
 import { doc, setDoc } from "firebase/firestore";
 import { db } from "../../config/firebase";
 import useUserStore from "../../stores/useUserStore";
 import { Rocket, GraduationCap, Calendar, University } from "lucide-react";
-import { parseDate } from "@internationalized/date"; // Utilidad de NextUI para fechas
 import { toast } from "sonner";
+
+// 1. IMPORTAMOS EL PROVEEDOR DE IDIOMA
+import { I18nProvider } from "@react-aria/i18n";
 
 const OnboardingPage = ({ onComplete }) => {
   const { user } = useUserStore();
@@ -38,7 +40,7 @@ const OnboardingPage = ({ onComplete }) => {
             universidad: universidad,
             fechaNacimiento: fechaStr,
             createdAt: new Date().toISOString()
-        }, { merge: true }); // Merge para no borrar datos si ya existen
+        }, { merge: true }); 
 
         // Avisamos a App.jsx que terminamos
         onComplete();
@@ -91,15 +93,17 @@ const OnboardingPage = ({ onComplete }) => {
                     onValueChange={setUniversidad}
                 />
 
-                {/* 3. Fecha Nacimiento */}
-                <DatePicker 
-                    label="Fecha de Nacimiento"
-                    variant="bordered"
-                    startContent={<Calendar className="text-default-400" size={18}/>}
-                    value={fechaNacimiento}
-                    onChange={setFechaNacimiento}
-                    showMonthAndYearPickers
-                />
+                {/* 3. Fecha Nacimiento (CORREGIDO A ESPAÑOL) */}
+                <I18nProvider locale="es-AR">
+                    <DatePicker 
+                        label="Fecha de Nacimiento"
+                        variant="bordered"
+                        startContent={<Calendar className="text-default-400" size={18}/>}
+                        value={fechaNacimiento}
+                        onChange={setFechaNacimiento}
+                        showMonthAndYearPickers
+                    />
+                </I18nProvider>
 
                 <Button 
                     size="lg" 

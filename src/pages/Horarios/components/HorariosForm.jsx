@@ -17,12 +17,12 @@ const COLORS = [
 const HorariosForm = ({ isOpen, onClose, onSubmit, initialData }) => {
   const [formData, setFormData] = useState({
     materia: "",
-    comision: "", // Nuevo campo
+    comision: "", 
     dia: "Lunes",
     inicio: "08:00",
     fin: "10:00",
     aula: "",
-    color: "#3b82f6" // Azul por defecto
+    color: "#3b82f6" 
   });
 
   useEffect(() => {
@@ -36,7 +36,7 @@ const HorariosForm = ({ isOpen, onClose, onSubmit, initialData }) => {
             inicio: "08:00", 
             fin: "10:00", 
             aula: "",
-            color: COLORS[10] // Azul default
+            color: COLORS[10] 
         });
     }
   }, [initialData, isOpen]);
@@ -105,7 +105,6 @@ const HorariosForm = ({ isOpen, onClose, onSubmit, initialData }) => {
                 />
               </div>
 
-              {/* Selector de Color */}
               <div>
                   <label className="text-small font-medium text-default-700 block mb-2">Color de etiqueta</label>
                   <ScrollShadow orientation="horizontal" className="pb-2">

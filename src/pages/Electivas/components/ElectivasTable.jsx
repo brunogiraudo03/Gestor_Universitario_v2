@@ -9,7 +9,7 @@ const columns = [
   {name: "ASIGNATURA", uid: "nombre"},
   {name: "NIVEL", uid: "nivel"},
   {name: "MODALIDAD", uid: "modalidad"},
-  {name: "CRÉDITOS", uid: "creditos"}, // COLUMNA NUEVA
+  {name: "CRÉDITOS", uid: "creditos"}, 
   {name: "C. REG", uid: "correlativasRegular"},
   {name: "C. APR", uid: "correlativasAprobada"},
   {name: "ESTADO", uid: "estado"},

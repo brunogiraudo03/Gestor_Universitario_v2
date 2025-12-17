@@ -107,7 +107,7 @@ const DashboardPage = ({ userData }) => {
         modoVacaciones,
         clasesHoy
     };
-  }, [materias, electivas, configMetas, todos, horarios, now]); // <--- Agregamos 'now' a las dependencias
+  }, [materias, electivas, configMetas, todos, horarios, now]); 
 
   if (loadingPlan || loadingElectivas || loadingAgenda || loadingHorarios) {
     return <div className="h-screen flex items-center justify-center"><Spinner size="lg" label="Sincronizando..." color="primary"/></div>;

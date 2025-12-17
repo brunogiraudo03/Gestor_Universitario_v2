@@ -13,7 +13,6 @@ const DataSection = () => {
 
   // --- 1. LIMPIEZA DE AGENDA ---
   const handleCleanAgenda = async () => {
-    // Confirmación nativa (por seguridad es mejor que el usuario tenga que frenar y leer)
     if (!confirm("⚠️ ¿Estás seguro de borrar los eventos pasados?")) return;
     
     setLoading(true);
@@ -35,7 +34,6 @@ const DataSection = () => {
         
         toast.success(`¡Listo! Eliminamos ${snapshot.size} eventos antiguos.`);
         
-        // Recarga suave
         setTimeout(() => window.location.reload(), 1500); 
 
     } catch (error) {
@@ -48,7 +46,7 @@ const DataSection = () => {
   // --- 2. EXPORTAR DATOS ---
   const handleExportData = async () => {
     setLoading(true);
-    const toastId = toast.loading("Generando copia de seguridad..."); // Feedback de carga
+    const toastId = toast.loading("Generando copia de seguridad..."); 
 
     try {
         const materiasRef = collection(db, "usuarios", user.uid, "materias");
@@ -113,7 +111,6 @@ const DataSection = () => {
 
   // --- 4. RESETEAR CUENTA (PELIGRO) ---
   const handleResetAccount = async () => {
-    // Doble confirmación por seguridad
     if(!confirm("⛔ PELIGRO: Se borrará TODO (Materias, Notas, Horarios).")) return;
     if(!confirm("¿Estás 100% seguro? Esta acción no se puede deshacer.")) return;
 
@@ -182,9 +179,6 @@ const DataSection = () => {
         {/* --- ZONA DE PELIGRO (DISEÑO ARREGLADO) --- */}
         <Card className="border border-danger-200 bg-danger-50 dark:bg-danger-900/10">
             <CardBody className="p-5 flex flex-col gap-6"> 
-                {/* ✅ CAMBIO: Usamos 'flex-col' y 'gap-6'.
-                   Esto separa visualmente el texto del botón y evita que se peguen.
-                */}
                 
                 <div className="flex items-center gap-3">
                     <div className="p-3 bg-danger-100 text-danger-600 rounded-xl dark:bg-danger-900/50 dark:text-danger-500">

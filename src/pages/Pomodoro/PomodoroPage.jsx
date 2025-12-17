@@ -13,7 +13,7 @@ const ALARM_SOUND = "https://assets.mixkit.co/active_storage/sfx/2869/2869-previ
 
 const PomodoroPage = () => {
   // --- ESTADOS ---
-  const [mode, setMode] = useState("focus"); // focus, short, long
+  const [mode, setMode] = useState("focus"); 
   const [isActive, setIsActive] = useState(false);
   const [timeLeft, setTimeLeft] = useState(25 * 60);
   
@@ -105,7 +105,7 @@ const PomodoroPage = () => {
     // Aplicar cambios al timer actual (Reiniciar)
     setIsActive(false);
     setTimeLeft(tempConfig[mode] * 60);
-    onOpenChange(false); // Cerrar modal
+    onOpenChange(false); 
   };
 
   // --- DATOS VISUALES ---
@@ -171,7 +171,7 @@ const PomodoroPage = () => {
                 </p>
             </div>
             
-            {/* Botón Flotante Configuración (Dentro de la card para diseño limpio) */}
+            {/* Botón Flotante Configuración */}
             <div className="absolute top-4 right-4">
                 <Button isIconOnly size="sm" variant="light" onPress={() => { setTempConfig(config); onOpen(); }}>
                     <Settings size={20} className="text-default-400 hover:text-foreground transition-colors"/>
