@@ -8,16 +8,13 @@ import {
   Settings, Volume2, VolumeX, Save 
 } from "lucide-react";
 
-// Sonido de campana
 const ALARM_SOUND = "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3";
 
 const PomodoroPage = () => {
-  // --- ESTADOS ---
   const [mode, setMode] = useState("focus"); 
   const [isActive, setIsActive] = useState(false);
   const [timeLeft, setTimeLeft] = useState(25 * 60);
   
-  // Configuración Personalizada (Carga desde localStorage o usa defaults)
   const [config, setConfig] = useState(() => {
     const saved = localStorage.getItem("pomodoroConfig");
     return saved ? JSON.parse(saved) : {
@@ -28,45 +25,15 @@ const PomodoroPage = () => {
     };
   });
 
-  // Modal de Configuración
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  // Estado temporal para el formulario del modal
   const [tempConfig, setTempConfig] = useState(config); 
-
   const audioRef = useRef(new Audio(ALARM_SOUND));
 
-  // --- EFECTOS ---
-
-  // 1. Pedir permiso de notificaciones al inicio
-  useEffect(() => {
-    if (Notification.permission !== "granted") {
-      Notification.requestPermission();
-    }
-  }, []);
-
-  // 2. Timer Logic
-  useEffect(() => {
-    let interval = null;
-    if (isActive && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft((time) => time - 1);
-      }, 1000);
-    } else if (timeLeft === 0 && isActive) {
-      handleTimerComplete();
-    }
-    return () => clearInterval(interval);
-  }, [isActive, timeLeft]);
-
-  // 3. Título de la pestaña
-  useEffect(() => {
-    const minutes = Math.floor(timeLeft / 60);
-    const seconds = timeLeft % 60;
-    const timeStr = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-    document.title = `${timeStr} - ${MODES[mode].label}`;
-    return () => document.title = "Gestor Universitario";
-  }, [timeLeft, mode]);
-
-  // --- FUNCIONES ---
+  const MODES = {
+    focus: { label: "Enfoque", color: "primary", icon: BrainCircuit },
+    short: { label: "Corto", color: "success", icon: Coffee },
+    long: { label: "Largo", color: "warning", icon: Armchair },
+  };
 
   const handleTimerComplete = () => {
     setIsActive(false);
@@ -84,6 +51,32 @@ const PomodoroPage = () => {
     }
   };
 
+  useEffect(() => {
+    if (Notification.permission !== "granted") {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  useEffect(() => {
+    let interval = null;
+    if (isActive && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft((time) => time - 1);
+      }, 1000);
+    } else if (timeLeft === 0 && isActive) {
+      handleTimerComplete();
+    }
+    return () => clearInterval(interval);
+  }, [isActive, timeLeft]);
+
+  useEffect(() => {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    const timeStr = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    document.title = `${timeStr} - ${MODES[mode].label}`;
+    return () => document.title = "Gestor Universitario";
+  }, [timeLeft, mode]);
+
   const toggleTimer = () => setIsActive(!isActive);
 
   const resetTimer = () => {
@@ -98,21 +91,12 @@ const PomodoroPage = () => {
   };
 
   const handleSaveConfig = () => {
-    // Guardar en Estado y LocalStorage
     setConfig(tempConfig);
     localStorage.setItem("pomodoroConfig", JSON.stringify(tempConfig));
     
-    // Aplicar cambios al timer actual (Reiniciar)
     setIsActive(false);
     setTimeLeft(tempConfig[mode] * 60);
     onOpenChange(false); 
-  };
-
-  // --- DATOS VISUALES ---
-  const MODES = {
-    focus: { label: "Enfoque", color: "primary", icon: BrainCircuit },
-    short: { label: "Corto", color: "success", icon: Coffee },
-    long: { label: "Largo", color: "warning", icon: Armchair },
   };
 
   const totalTime = config[mode] * 60;
@@ -127,7 +111,6 @@ const PomodoroPage = () => {
   return (
     <div className="flex flex-col items-center justify-center min-h-[85vh] p-4 max-w-md mx-auto">
       
-      {/* 1. SELECCIÓN DE MODO */}
       <div className="flex gap-2 mb-8 bg-content2 p-1.5 rounded-full shadow-inner">
         {Object.entries(MODES).map(([key, data]) => (
           <Button
@@ -144,11 +127,9 @@ const PomodoroPage = () => {
         ))}
       </div>
 
-      {/* 2. RELOJ PRINCIPAL */}
       <Card className="w-full shadow-xl border border-default-100 bg-gradient-to-br from-content1 to-default-50">
         <CardBody className="flex flex-col items-center justify-center py-12 relative overflow-hidden">
             
-            {/* Círculo de Progreso */}
             <CircularProgress 
                 classNames={{
                     svg: "w-72 h-72 drop-shadow-lg transform rotate-[-90deg]",
@@ -161,7 +142,6 @@ const PomodoroPage = () => {
                 aria-label="Progreso"
             />
 
-            {/* Texto del Reloj */}
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none">
                 <span className="text-7xl font-black tracking-tighter tabular-nums text-foreground drop-shadow-sm">
                     {formatTime(timeLeft)}
@@ -171,7 +151,6 @@ const PomodoroPage = () => {
                 </p>
             </div>
             
-            {/* Botón Flotante Configuración */}
             <div className="absolute top-4 right-4">
                 <Button isIconOnly size="sm" variant="light" onPress={() => { setTempConfig(config); onOpen(); }}>
                     <Settings size={20} className="text-default-400 hover:text-foreground transition-colors"/>
@@ -181,7 +160,6 @@ const PomodoroPage = () => {
         </CardBody>
       </Card>
 
-      {/* 3. CONTROLES INFERIORES */}
       <div className="flex items-center gap-8 mt-10">
         
         <Tooltip content="Reiniciar Reloj">
@@ -217,7 +195,6 @@ const PomodoroPage = () => {
             : "🧘 Tip: Levántate, estira las piernas y toma agua."}
       </p>
 
-      {/* --- MODAL DE CONFIGURACIÓN --- */}
       <Modal isOpen={isOpen} onOpenChange={onOpenChange} backdrop="blur">
         <ModalContent>
           {(onClose) => (
