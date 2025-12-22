@@ -35,7 +35,7 @@ const Sidebar = ({ onClose }) => {
     <>
       <aside className="h-full flex flex-col bg-background border-r border-divider p-6 w-64">
         {/* LOGO */}
-        <div className="flex justify-center px-2 mb-8 w-full">
+        <div id="sidebar-logo" className="flex justify-center px-2 mb-8 w-full">
             <div className="bg-gradient-to-tr from-primary to-secondary p-2 rounded-xl shadow-lg shadow-primary/20 flex items-center justify-center shrink-0">
                 <img 
                     src="/negro.png" 
@@ -46,12 +46,19 @@ const Sidebar = ({ onClose }) => {
         </div>
         
         {/* MENÚ */}
-        <nav className="flex flex-col gap-2 flex-1 overflow-y-auto">
+        <nav id="sidebar-menu" className="flex flex-col gap-2 flex-1 overflow-y-auto">
           {menuItems.map((item) => {
               const isActive = location.pathname === item.path;
+              
+              // GENERAMOS EL ID DINÁMICO PARA EL TUTORIAL
+              // Si es "/", el ID será "sidebar-item-dashboard"
+              // Si es "/plan", el ID será "sidebar-item-plan"
+              const itemId = `sidebar-item-${item.path === '/' ? 'dashboard' : item.path.substring(1)}`;
+
               return (
                   <Button 
                       key={item.path}
+                      id={itemId} // <--- AQUÍ ESTÁ LA CLAVE
                       variant={isActive ? "flat" : "light"} 
                       color={isActive ? "primary" : "default"}
                       startContent={<item.icon size={20}/>} 
@@ -69,7 +76,7 @@ const Sidebar = ({ onClose }) => {
 
         {/* USUARIO */}
         <div className="border-t border-divider pt-4 mt-2">
-            <div 
+            <div id="sidebar-user"
                 className="cursor-pointer hover:bg-default-100 p-2 rounded-lg transition-all duration-200 group"
                 onClick={() => {
                     navigate("/config");
@@ -86,7 +93,7 @@ const Sidebar = ({ onClose }) => {
                     }}
                     classNames={{
                         name: "font-bold group-hover:text-primary transition-colors",
-                        description: "text-default-400 text-xs truncate max-w-[140px]" // truncate por si es muy largo
+                        description: "text-default-400 text-xs truncate max-w-[140px]" 
                     }}
                 />
             </div>

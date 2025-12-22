@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Button, Card, CardBody, Progress, Divider, Spinner, Chip } from "@nextui-org/react";
 import { 
   Trophy, TrendingUp, ChevronRight, Network, School, 
@@ -15,15 +15,22 @@ import { useElectivas } from "../../hooks/useElectivas";
 import { useTodos } from "../../hooks/useTodos";
 import { useHorarios } from "../../hooks/useHorarios";
 
+// Tutorial
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
+import { tutorialSteps } from "../../config/tutorialSteps";
+
 const DashboardPage = ({ userData }) => {
   const navigate = useNavigate();
   const { user } = useUserStore();
   
-  // Estado para forzar la actualización del tiempo cada minuto
+  // Referencia para controlar el driver y evitar bugs de superposición
+  const driverRef = useRef(null);
+  
+  // Estado para forzar la actualización del tiempo
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
-    // Actualizamos la variable 'now' cada 30 segundos para ser precisos
     const timer = setInterval(() => {
         setNow(new Date());
     }, 30000);
@@ -36,6 +43,60 @@ const DashboardPage = ({ userData }) => {
   const { todos, loading: loadingAgenda } = useTodos();
   const { horarios, loading: loadingHorarios } = useHorarios();
 
+  // 1. VARIABLE DE CARGA UNIFICADA
+  const isLoading = loadingPlan || loadingElectivas || loadingAgenda || loadingHorarios;
+
+  // 2. LÓGICA DEL TUTORIAL (Driver.js)
+  useEffect(() => {
+    // Solo arrancamos si ya terminó de cargar todo
+    if (!isLoading) {
+        
+        const forceShow = localStorage.getItem("showTutorial") === "true";
+        const alreadySeen = localStorage.getItem("hasSeenTutorial");
+
+        if (forceShow || !alreadySeen) {
+            
+            // AUMENTADO A 1500ms: Esto asegura que la Sidebar se haya renderizado 
+            // completamente después de un login o redirección.
+            const timer = setTimeout(() => {
+                
+                // Configuramos el driver
+                driverRef.current = driver({
+                    showProgress: true,
+                    animate: true,
+                    allowClose: true,
+                    popoverClass: 'driverjs-theme', // Estilo oscuro
+                    nextBtnText: 'Siguiente',
+                    prevBtnText: 'Atrás',
+                    doneBtnText: '¡Entendido!',
+                    steps: tutorialSteps,
+                    onDestroyStarted: () => {
+                        // Limpieza al cerrar
+                        if (driverRef.current) {
+                            driverRef.current.destroy();
+                            driverRef.current = null;
+                        }
+                        // Marcamos que ya lo vio y borramos flags
+                        localStorage.setItem("hasSeenTutorial", "true");
+                        localStorage.removeItem("showTutorial");
+                    },
+                });
+                
+                driverRef.current.drive();
+            }, 1500); 
+
+            // Cleanup si el usuario cambia de página rápido
+            return () => {
+                clearTimeout(timer);
+                if (driverRef.current) {
+                    driverRef.current.destroy();
+                }
+            };
+        }
+    }
+  }, [isLoading]); 
+
+  // --- CÁLCULOS DE ESTADÍSTICAS ---
   const stats = useMemo(() => {
     // 1. PROMEDIO
     const totalMaterias = materias.length;
@@ -75,7 +136,7 @@ const DashboardPage = ({ userData }) => {
     const pendientes = todos.filter(t => !t.completado).sort((a,b) => a.fechaEntrega.localeCompare(b.fechaEntrega));
     const proximoEvento = pendientes.length > 0 ? pendientes[0] : null;
 
-    // 5. HORARIOS (Lógica arreglada con actualización en tiempo real)
+    // 5. HORARIOS
     const modoVacaciones = horarios.length === 0;
     const hoyDiaNombre = now.toLocaleDateString('es-ES', { weekday: 'long' });
     const horaActual = now.getHours();
@@ -88,11 +149,9 @@ const DashboardPage = ({ userData }) => {
             const esHoy = normalizar(h.dia) === normalizar(hoyDiaNombre);
             if (!esHoy) return false;
 
-            // Parsear Hora Fin
             const horaFin = parseInt(h.fin.split(":")[0]); 
             const minFin = parseInt(h.fin.split(":")[1] || "0");
             
-            // Lógica estricta: La clase se muestra SOLO si NO ha terminado.
             if (horaFin > horaActual) return true;
             if (horaFin === horaActual && minFin > minutosActuales) return true;
             
@@ -109,10 +168,12 @@ const DashboardPage = ({ userData }) => {
     };
   }, [materias, electivas, configMetas, todos, horarios, now]); 
 
-  if (loadingPlan || loadingElectivas || loadingAgenda || loadingHorarios) {
+  // SPINNER DE CARGA
+  if (isLoading) {
     return <div className="h-screen flex items-center justify-center"><Spinner size="lg" label="Sincronizando..." color="primary"/></div>;
   }
 
+  // --- RENDERIZADO DEL DASHBOARD ---
   return (
     <div className="p-4 md:p-8 max-w-[1600px] mx-auto">
         <header className="mb-8 mt-2 md:mt-0">
@@ -123,7 +184,7 @@ const DashboardPage = ({ userData }) => {
         </header>
         
         {/* KPI CARDS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div id="dashboard-kpi" className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             
             {/* Promedio */}
             <Card className="bg-gradient-to-br from-yellow-500 to-orange-600 border-none shadow-xl shadow-orange-500/20 text-white">
@@ -212,7 +273,7 @@ const DashboardPage = ({ userData }) => {
             </div>
 
             {/* PRÓXIMA CLASE */}
-            <div className="lg:col-span-1">
+            <div id="dashboard-next-class" className="lg:col-span-1">
                 <Card className="h-full border border-default-200 bg-content1">
                     <CardBody className="p-5 flex flex-col justify-center items-center text-center relative overflow-hidden">
                         <div className={`absolute top-0 w-full h-1 ${stats.modoVacaciones ? "bg-warning" : "bg-primary"}`}></div>
@@ -237,7 +298,6 @@ const DashboardPage = ({ userData }) => {
                                         <div className="flex items-center gap-2 justify-center mb-3 text-primary">
                                             <School size={20}/>
                                             <span className="font-bold uppercase text-xs">
-                                                {/* Lógica de título: Si empieza antes de ahora, es "Actual", sino "Siguiente" */}
                                                 {parseInt(stats.clasesHoy[0].inicio.split(":")[0]) <= now.getHours() 
                                                     ? "Cursando Ahora" 
                                                     : "Siguiente Clase"}

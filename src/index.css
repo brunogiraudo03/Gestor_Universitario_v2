@@ -1,3 +1,145 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* --- ESTILOS DEL TUTORIAL (DRIVER.JS) --- */
+.driver-popover.driverjs-theme {
+  background-color: #18181b; /* Zinc 950 (Dark background) */
+  color: #ffffff;
+  border-radius: 16px; /* Bordes redondeados modernos */
+  padding: 16px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  border: 1px solid #27272a; /* Zinc 800 */
+  font-family: inherit; /* Usar tu fuente (Inter/System) */
+  max-width: 350px;
+}
+
+.driver-popover.driverjs-theme .driver-popover-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #ffffff;
+}
+
+.driver-popover.driverjs-theme .driver-popover-description {
+  font-size: 0.9rem;
+  color: #a1a1aa; /* Zinc 400 */
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+/* Botones del tutorial */
+.driver-popover.driverjs-theme button {
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+  cursor: pointer;
+  border: none;
+  text-shadow: none;
+}
+
+/* Botón "Siguiente" / "Entendido" */
+.driver-popover.driverjs-theme button.driver-popover-next-btn {
+  background-color: #006FEE; /* Primary Blue de NextUI */
+  color: white;
+  border: 1px solid #006FEE;
+}
+.driver-popover.driverjs-theme button.driver-popover-next-btn:hover {
+  background-color: #005bc4;
+}
+
+/* Botón "Atrás" */
+.driver-popover.driverjs-theme button.driver-popover-prev-btn {
+  background-color: transparent;
+  color: #a1a1aa;
+  border: 1px solid #3f3f46;
+}
+.driver-popover.driverjs-theme button.driver-popover-prev-btn:hover {
+  color: white;
+  border-color: #71717a;
+}
+
+/* La "X" de cerrar */
+.driver-popover.driverjs-theme .driver-popover-close-btn {
+  color: #a1a1aa;
+  transition: color 0.2s;
+}
+.driver-popover.driverjs-theme .driver-popover-close-btn:hover {
+  color: #ef4444; /* Rojo al pasar el mouse */
+}
+
+/* El foco (Overlay) */
+.driver-overlay {
+  opacity: 0.8 !important; /* Más oscuro para enfocar mejor */
+}
+
+/* --- TEMA OSCURO PARA DRIVER.JS --- */
+div.driver-popover.driverjs-theme {
+  background-color: #18181b; /* Zinc 950 */
+  color: #ffffff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  border: 1px solid #27272a; /* Zinc 800 */
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  max-width: 320px;
+}
+
+div.driver-popover.driverjs-theme .driver-popover-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #fafafa;
+}
+
+div.driver-popover.driverjs-theme .driver-popover-description {
+  font-size: 0.9rem;
+  color: #a1a1aa; /* Zinc 400 */
+  line-height: 1.5;
+  margin-bottom: 0;
+}
+
+div.driver-popover.driverjs-theme .driver-popover-footer {
+  margin-top: 16px;
+}
+
+div.driver-popover.driverjs-theme button {
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  text-shadow: none;
+}
+
+/* Botón Siguiente */
+div.driver-popover.driverjs-theme button.driver-popover-next-btn {
+  background-color: #006FEE; /* NextUI Primary */
+  color: white;
+}
+div.driver-popover.driverjs-theme button.driver-popover-next-btn:hover {
+  background-color: #005bc4;
+}
+
+/* Botón Atrás */
+div.driver-popover.driverjs-theme button.driver-popover-prev-btn {
+  background-color: transparent;
+  color: #a1a1aa;
+  border: 1px solid #3f3f46;
+}
+div.driver-popover.driverjs-theme button.driver-popover-prev-btn:hover {
+  color: white;
+  border-color: #71717a;
+}
+
+/* Botón X Cerrar */
+div.driver-popover.driverjs-theme .driver-popover-close-btn {
+  color: #71717a;
+}
+div.driver-popover.driverjs-theme .driver-popover-close-btn:hover {
+  color: #ef4444;
+}

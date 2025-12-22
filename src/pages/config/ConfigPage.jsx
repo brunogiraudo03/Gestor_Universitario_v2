@@ -1,16 +1,17 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom"; // <--- Importante para que ande el botón
 import { Card, CardBody, Button, Switch, Chip, Snippet } from "@nextui-org/react";
 import { 
-  Moon, Sun, Smartphone, CheckCircle, Coffee, Settings, Mail
+  Moon, Sun, Smartphone, CheckCircle, Coffee, Settings, Mail, HelpCircle
 } from "lucide-react";
 import useUserStore from "../../stores/useUserStore";
 import { usePWA } from "../../hooks/usePWA";
-
 
 import UserSection from "./components/UserSection";
 import DataSection from "./components/DataSection";
 
 const ConfigPage = () => {
+  const navigate = useNavigate(); // Hook para navegar
   const { user } = useUserStore();
   const { isInstallable, isInstalled, installApp } = usePWA();
   const [isDark, setIsDark] = useState(false);
@@ -55,16 +56,48 @@ const ConfigPage = () => {
         </div>
         <div>
             <h1 className="text-2xl font-bold">Configuración</h1>
-            <p className="text-default-500 text-sm">Gestiona tu cuenta y app</p>
+            <p className="text-default-500 text-sm">Gestiona tu cuenta y preferencias</p>
         </div>
       </div>
 
-      {/* 1. SECCIÓN USUARIO (Componente Separado) */}
+      {/* 1. SECCIÓN USUARIO (Siempre arriba) */}
       <UserSection />
 
-      {/* 2. SECCIÓN GENERAL (Tema, PWA, Soporte) */}
+      {/* 2. SECCIÓN AYUDA (Subida de nivel para visibilidad) */}
+      <Card className="border border-primary/20 bg-primary/5 shadow-sm">
+          <CardBody className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary text-white rounded-lg shadow-md shadow-primary/30">
+                  <HelpCircle size={20} />
+                </div>
+                <div>
+                  <p className="font-bold text-foreground">¿Cómo funciona?</p>
+                  <p className="text-xs text-default-500">Repetir el tour de bienvenida.</p>
+                </div>
+              </div>
+              
+              <Button 
+                size="sm"
+                color="primary" 
+                variant="solid" 
+                className="font-medium"
+                onPress={() => {
+                    // 1. Guardamos la "orden"
+                    localStorage.setItem("showTutorial", "true");
+                    // 2. Ejecutamos la navegación al Dashboard
+                    navigate("/");
+                }}
+              >
+                Ver Tutorial
+              </Button>
+            </div>
+          </CardBody>
+        </Card>
+
+      {/* 3. SECCIÓN GENERAL (Tema, PWA, Soporte) */}
       <div className="space-y-4">
-          <h3 className="text-lg font-bold px-1 mt-2">General</h3>
+          <h3 className="text-lg font-bold px-1 mt-4">General</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Tema */}
@@ -143,8 +176,11 @@ const ConfigPage = () => {
           </Card>
       </div>
 
-      {/* 3. SECCIÓN DATOS (Componente Separado) */}
-      <DataSection />
+      {/* 4. SECCIÓN DATOS (Al final, zona de peligro) */}
+      <div className="pt-4">
+          <h3 className="text-lg font-bold px-1 mb-4 text-danger">Zona de Datos</h3>
+          <DataSection />
+      </div>
 
       <p className="text-center text-xs text-default-400 pt-8">
         Uplanner v3 • Bruno Giraudo
