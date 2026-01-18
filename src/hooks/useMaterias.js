@@ -1,21 +1,21 @@
 import { useState, useEffect } from "react";
-import { 
-  collection, 
-  addDoc, 
-  deleteDoc, 
-  updateDoc, 
-  doc, 
-  onSnapshot, 
-  query, 
-  orderBy 
+import {
+  collection,
+  addDoc,
+  deleteDoc,
+  updateDoc,
+  doc,
+  onSnapshot,
+  query,
+  orderBy
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 import useUserStore from "../stores/useUserStore";
 
 export const useMaterias = () => {
-  const { user } = useUserStore();
-  const [materias, setMaterias] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { user, materias, setMaterias } = useUserStore();
+  // Si ya tenemos materias en el store, no mostramos loading inicial para evitar parpadeos
+  const [loading, setLoading] = useState(materias.length === 0);
 
   const materiasRef = user ? collection(db, "usuarios", user.uid, "plan") : null;
 
@@ -23,13 +23,16 @@ export const useMaterias = () => {
     if (!user || !materiasRef) return;
 
     const q = query(materiasRef, orderBy("nombre"));
-    
+
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const datos = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
       setMaterias(datos);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error al suscribirse a materias:", error);
       setLoading(false);
     });
 
