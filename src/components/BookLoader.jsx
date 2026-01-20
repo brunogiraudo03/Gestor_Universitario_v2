@@ -43,21 +43,26 @@ const BookLoader = ({ label = "Cargando..." }) => {
 
     return (
         <motion.div
-            className="flex flex-col items-center justify-center gap-12"
+            className="flex flex-col items-center justify-center gap-8 md:gap-12 w-full px-4"
             initial="initial"
             animate="animate"
             exit="exit"
         >
             {/* Wrapper to keep book centered when it opens */}
-            <div style={{
-                width: 320, // Double the book width to accommodate the open state
-                height: 208,
-                perspective: "1200px",
-                position: "relative",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center"
-            }}>
+            <div
+                className="scale-75 md:scale-100"
+                style={{
+                    width: "100%",
+                    maxWidth: 320, // Double the book width to accommodate the open state
+                    height: 208,
+                    perspective: "1200px",
+                    position: "relative",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    margin: "0 auto"
+                }}
+            >
                 {/* Inner container positioned to center the closed book */}
                 <div style={{
                     width: 160,

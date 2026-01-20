@@ -43,34 +43,35 @@ const HabitCard = ({ habito, weekDates, completados, onToggleDay, onEdit, onDele
             exit={{ opacity: 0, y: -20 }}
         >
             <Card className="border-2 border-default-200 hover:border-default-300 transition-colors">
-                <CardBody className="p-4">
-                    <div className="flex items-center gap-4">
-                        {/* Icono y nombre */}
+                <CardBody className="p-3 md:p-4">
+                    {/* Layout responsivo: 2 filas en móvil, 1 fila en desktop */}
+                    <div className="flex flex-col md:flex-row md:items-center gap-3">
+                        {/* Icono, Nombre y Racha */}
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                             <div
-                                className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
+                                className="w-11 h-11 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-xl md:text-2xl flex-shrink-0"
                                 style={{ backgroundColor: `${habito.color}20` }}
                             >
                                 {habito.icono}
                             </div>
                             <div className="flex-1 min-w-0">
-                                <h3 className="font-bold text-lg truncate">{habito.nombre}</h3>
+                                <h3 className="font-bold text-base md:text-lg truncate">{habito.nombre}</h3>
                                 {habito.descripcion && (
-                                    <p className="text-sm text-default-500 truncate">{habito.descripcion}</p>
+                                    <p className="text-xs md:text-sm text-default-500 truncate">{habito.descripcion}</p>
                                 )}
                             </div>
+
+                            {/* Racha */}
+                            {streak > 0 && (
+                                <div className="flex items-center gap-1 px-2 md:px-3 py-1 rounded-full bg-orange-500/10 text-orange-500 flex-shrink-0">
+                                    <Flame size={14} fill="currentColor" />
+                                    <span className="font-bold text-xs md:text-sm">{streak}</span>
+                                </div>
+                            )}
                         </div>
 
-                        {/* Racha */}
-                        {streak > 0 && (
-                            <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-orange-500/10 text-orange-500">
-                                <Flame size={16} fill="currentColor" />
-                                <span className="font-bold text-sm">{streak}</span>
-                            </div>
-                        )}
-
                         {/* Días de la semana */}
-                        <div className="flex gap-2">
+                        <div className="flex gap-1.5 md:gap-2 justify-end pl-14 md:pl-0">
                             {weekDates.map((date, index) => (
                                 <HabitDayCircle
                                     key={index}
@@ -89,7 +90,7 @@ const HabitCard = ({ habito, weekDates, completados, onToggleDay, onEdit, onDele
                                     isIconOnly
                                     size="sm"
                                     variant="light"
-                                    className="text-default-400"
+                                    className="text-default-400 flex-shrink-0"
                                 >
                                     <MoreVertical size={18} />
                                 </Button>
