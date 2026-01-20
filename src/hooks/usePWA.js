@@ -17,18 +17,16 @@ export const usePWA = () => {
       // IMPORTANTE: Prevenir que Chrome muestre su barra automática abajo
       // para que nosotros tengamos el control con nuestro botón.
       e.preventDefault();
-      
+
       // Guardamos el evento para usarlo después
       setDeferredPrompt(e);
-      
+
       // Avisamos a la UI que muestre el botón
       setIsInstallable(true);
-      console.log("Evento de instalación capturado exitosamente");
     };
 
     // 3. Detectar cuando se instaló exitosamente
     const handleAppInstalled = () => {
-      console.log("App instalada");
       setIsInstalled(true);
       setIsInstallable(false);
       setDeferredPrompt(null);
@@ -54,8 +52,6 @@ export const usePWA = () => {
 
     // Esperamos la respuesta del usuario
     const { outcome } = await deferredPrompt.userChoice;
-    
-    console.log(`Usuario respondió: ${outcome}`);
 
     // Limpiamos la variable (solo sirve una vez)
     setDeferredPrompt(null);

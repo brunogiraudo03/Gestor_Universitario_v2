@@ -17,11 +17,13 @@
     "driver.js": "^1.4.0",
     "firebase": "^12.6.0",
     "framer-motion": "^12.23.26",
+    "lottie-react": "^2.4.1",
     "lucide-react": "^0.561.0",
     "react": "^19.2.0",
     "react-calendar-heatmap": "^1.10.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.10.1",
+    "recharts": "^3.6.0",
     "sonner": "^2.0.7",
     "zustand": "^5.0.9"
   },

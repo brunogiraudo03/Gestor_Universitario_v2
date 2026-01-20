@@ -14,6 +14,9 @@ const DashboardPage = lazy(() => import("./pages/Dashboard/DashboardPage"));
 const PlanEstudioPage = lazy(() => import("./pages/PlanEstudio/PlanEstudioPage"));
 const ElectivasPage = lazy(() => import("./pages/Electivas/ElectivasPage"));
 const CorrelativasPage = lazy(() => import("./pages/Correlativas/CorrelativasPage"));
+const TablerosPage = lazy(() => import("./pages/Tableros/TablerosPage"));
+const BoardView = lazy(() => import("./pages/Tableros/BoardView"));
+const HabitosPage = lazy(() => import("./pages/Habitos/HabitosPage"));
 const AgendaPage = lazy(() => import("./pages/Agenda/AgendaPage"));
 const PomodoroPage = lazy(() => import("./pages/Pomodoro/PomodoroPage"));
 const HorariosPage = lazy(() => import("./pages/Horarios/HorariosPage"));
@@ -45,7 +48,7 @@ function App() {
     // B. Escuchar cambios de Autenticación
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       // delay artificial mínimo para ver la animación de carga si carga muy rápido
-      const minLoadTime = new Promise(resolve => setTimeout(resolve, 2000));
+      const minLoadTime = new Promise(resolve => setTimeout(resolve, 800));
 
       if (currentUser) {
         // Si hay usuario, buscamos sus datos extra en Firestore
@@ -95,7 +98,7 @@ function App() {
           </motion.div>
         ) : (
           <div key="app-content">
-            <Suspense fallback={<div className="h-screen flex items-center justify-center"><BookLoader label="Cargando sección..." /></div>}>
+            <Suspense fallback={<div className="h-screen flex items-center justify-center"><Spinner size="lg" label="Cargando..." /></div>}>
               <Routes>
                 {/* Ruta Login Pública */}
                 <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/" />} />
@@ -128,6 +131,24 @@ function App() {
                     <Route path="/correlativas" element={user ? (
                       <Layout>
                         <CorrelativasPage />
+                      </Layout>
+                    ) : <Navigate to="/login" />} />
+
+                    <Route path="/tableros" element={user ? (
+                      <Layout>
+                        <TablerosPage />
+                      </Layout>
+                    ) : <Navigate to="/login" />} />
+
+                    <Route path="/tableros/:id" element={user ? (
+                      <Layout>
+                        <BoardView />
+                      </Layout>
+                    ) : <Navigate to="/login" />} />
+
+                    <Route path="/habitos" element={user ? (
+                      <Layout>
+                        <HabitosPage />
                       </Layout>
                     ) : <Navigate to="/login" />} />
 

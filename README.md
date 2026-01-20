@@ -33,6 +33,27 @@ Panel de control centralizado con estadísticas en tiempo real:
 - Configuración de metas personalizadas (ej: "Juntar 20 créditos para el título intermedio").
 - Barras de progreso dinámicas para cada objetivo.
 
+### 🔥 Sistema de Hábitos
+- **Rastreador de Hábitos Diarios:** Crea y monitorea hábitos académicos y personales.
+- **Estadísticas Detalladas:** Visualiza tu progreso con gráficos de racha, tasa de éxito y calendario de actividad.
+- **Categorías Personalizables:** Organiza hábitos por tipo (Estudio, Salud, Productividad, etc.).
+- **Recordatorios:** Configura notificaciones para no olvidar tus hábitos.
+
+### 📋 Tableros Kanban
+- **Organización Visual:** Gestiona proyectos y tareas con tableros estilo Trello/Notion.
+- **Listas y Tarjetas:** Crea listas personalizadas y arrastra tarjetas entre ellas.
+- **Integración con Agenda:** Convierte tarjetas en tareas con fechas de vencimiento.
+- **Sincronización Automática:** Eliminar una lista borra todas sus tareas asociadas en la agenda.
+- **Fondos Personalizados:** Elige entre gradientes modernos para cada tablero.
+
+### 🍅 Pomodoro Timer Mejorado
+- **Mascota Interactiva:** Acompañante animado que reacciona a tu estado (estudiando, cansado, descansando).
+- **Timer de Alta Precisión:** Usa `requestAnimationFrame` para eliminar delays (sin retraso de Google).
+- **Persistencia en Background:** El timer sigue funcionando aunque salgas de la página.
+- **Sistema de Estadísticas:** Rastrea sesiones completadas, minutos estudiados y racha de días.
+- **Gamificación:** Mensajes motivacionales basados en tu progreso.
+- **Diseño Compacto:** Optimizado para móvil, todo visible sin scroll.
+
 ### 📱 PWA (Progressive Web App)
 - **Instalable:** Funciona como una app nativa en Android/iOS.
 - **Offline First:** Consulta tus datos básicos sin conexión.
