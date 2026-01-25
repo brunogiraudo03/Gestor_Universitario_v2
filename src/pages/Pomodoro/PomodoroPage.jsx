@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import PomodoroMascot from "./components/PomodoroMascot";
+
 import { usePomodoroStats } from "./hooks/usePomodoroStats";
 
 const ALARM_SOUND = "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3";
@@ -104,13 +104,18 @@ const PomodoroPage = () => {
 
   const handleTimerComplete = () => {
     setIsActive(false);
+    setTimeLeft(0); // Ensure it shows 00:00
     startTimeRef.current = null;
 
     if (config.sound) {
-      audioRef.current.currentTime = 0;
-      audioRef.current.play().catch(() => {
-        toast.error("No se pudo reproducir el sonido");
-      });
+      // Intentar reproducir sonido
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((error) => {
+          console.error("Audio play failed:", error);
+          toast.error("No se pudo reproducir el sonido (bloqueado por navegador)");
+        });
+      }
     }
 
     if (Notification.permission === "granted") {
@@ -124,12 +129,7 @@ const PomodoroPage = () => {
     toast.success(mode === "focus" ? "🎉 ¡Sesión completada!" : "✨ Descanso terminado");
   };
 
-  const mascotState = useMemo(() => {
-    if (!isActive) return "idle";
-    if (mode !== "focus") return "break";
-    if (timeLeft <= 300) return "tired";
-    return "focusing";
-  }, [isActive, mode, timeLeft]);
+
 
   useEffect(() => {
     if (Notification.permission !== "granted") {
@@ -155,6 +155,13 @@ const PomodoroPage = () => {
   };
 
   const toggle = () => {
+    if (!isActive) {
+      // HACK: "Desbloquear" el audio en interacción del usuario (móviles/chrome)
+      audioRef.current.play().then(() => {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }).catch(() => { });
+    }
     setIsActive(!isActive);
   };
 
@@ -203,23 +210,9 @@ const PomodoroPage = () => {
         ))}
       </div>
 
-      {/* Mascota */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={mascotState}
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.8 }}
-          className="mb-2 md:mb-3"
-        >
-          <div className="scale-75 md:scale-100">
-            <PomodoroMascot state={mascotState} />
-          </div>
-        </motion.div>
-      </AnimatePresence>
-
       {/* Timer Card */}
       <Card className="w-full shadow-xl border border-default-100 bg-gradient-to-br from-content1 to-default-50">
+
         <CardBody className="flex flex-col items-center justify-center py-6 md:py-8 relative overflow-hidden">
 
           <CircularProgress
@@ -270,9 +263,12 @@ const PomodoroPage = () => {
                 {notificationPermission === "granted" ? <Bell size={18} /> : <BellOff size={18} />}
               </Button>
             </Tooltip>
-            <Button isIconOnly size="sm" variant="light" onPress={() => { setTempConfig(config); onOpen(); }}>
-              <Settings size={18} className="text-default-400" />
-            </Button>
+            <Tooltip content={JSON.stringify(config.sound) ? "Sonido ON" : "Sonido OFF"}>
+              {/* Fixed logic in toggle tooltip or similar if needed, keeping simple here */}
+              <Button isIconOnly size="sm" variant="light" onPress={() => { setTempConfig(config); onOpen(); }}>
+                <Settings size={18} className="text-default-400" />
+              </Button>
+            </Tooltip>
           </div>
 
         </CardBody>
