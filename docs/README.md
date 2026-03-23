@@ -1,4 +1,4 @@
-# Documentación de Gestor Universitario v2
+# Documentación de Gestor Universitario v2 (Uplanner)
 
 Bienvenido a la documentación oficial del **Gestor Universitario v2**. Esta carpeta contiene información detallada sobre la arquitectura, configuración, características y guías de uso de la aplicación.
 
@@ -19,22 +19,33 @@ Bienvenido a la documentación oficial del **Gestor Universitario v2**. Esta car
 3. **[Características y Funcionalidades (FEATURES)](./FEATURES.md)**
    - **Dashboard**: Vista general y métricas.
    - **Plan de Estudio**: Gestión de materias y progreso.
+   - **Electivas**: Créditos y metas optativas.
+   - **Correlativas**: Mapa de habilitaciones.
+   - **Tableros**: Kanban para proyectos y tareas.
    - **Agenda**: Calendario de entregas y eventos.
    - **Horarios**: Organización semanal de cursada.
    - **Pomodoro**: Timer de estudio integrado.
-   - **Hábitos**: Tracker de hábitos diarios/semanales.
-   - **Tableros**: Gestión de tareas estilo Kanban.
 
 4. **[Guía de Estilos y Contribución (GUIDELINES)](./GUIDELINES.md)**
    - Convenciones de código.
    - Estilos UI (NextUI + Tailwind).
    - Buenas prácticas (Componentes, Hooks).
 
+5. **[Contexto General de la App (APP_CONTEXT)](./APP_CONTEXT.md)**
+   - Quiénes usan la app y para qué.
+   - Modelo de datos en Firestore.
+   - Decisiones de diseño importantes.
+
+6. **[Reglas para IAs (AI_RULES)](./AI_RULES.md)**
+   - Qué no romper.
+   - Patrones a seguir.
+   - Precauciones con Firebase.
+
 ---
 
 ## Resumen Rápido
 
-El **Gestor Universitario v2** es una PWA (Progressive Web App) diseñada para ayudar a estudiantes universitarios a organizar su vida académica. Permite llevar un control exhaustivo de materias, notas, horarios, tareas y hábitos de estudio, todo sincronizado en la nube mediante Firebase.
+El **Gestor Universitario v2 (Uplanner)** es una PWA (Progressive Web App) diseñada para ayudar a estudiantes universitarios a organizar su vida académica. Permite llevar un control exhaustivo de materias, notas, horarios, tareas y proyectos, todo sincronizado en la nube mediante Firebase.
 
 ### Tecnologías Principales
 
@@ -44,5 +55,6 @@ El **Gestor Universitario v2** es una PWA (Progressive Web App) diseñada para a
 - **State Management**: Zustand
 - **Date Handling**: date-fns
 - **Charts**: Recharts
+- **Animaciones**: Framer Motion
 
 Para comenzar, revisa la guía de [Configuración](./SETUP.md).

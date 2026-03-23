@@ -1,6 +1,6 @@
 # Arquitectura del Proyecto
 
-Este documento describe la estructura técnica y las decisiones de diseño del **Gestor Universitario v2**.
+Este documento describe la estructura técnica y las decisiones de diseño del **Gestor Universitario v2 (Uplanner)**.
 
 ## Estructura de Directorios
 
@@ -8,22 +8,22 @@ El código fuente se encuentra en la carpeta `src/`. A continuación, se detalla
 
 ```
 src/
-├── components/       # Componentes reutilizables (Botones, Layouts, Loaders)
-├── config/           # Configuración de servicios externos (Firebase)
-├── hooks/            # Custom Hooks (Lógica reutilizable)
-├── pages/            # Vistas principales (Rutas de la aplicación)
-│   ├── Agenda/       # Módulo de calendario y eventos
-│   ├── Auth/         # Login y Onboarding
-│   ├── Config/       # Configuración de usuario y datos
-│   ├── Dashboard/    # Pantalla principal con métricas
-│   ├── Electivas/    # Gestión de materias electivas
-│   ├── Habitos/      # Tracker de hábitos
+├── components/       # Componentes reutilizables (Sidebar, Layout, Loader)
+├── config/           # Configuración de servicios externos (Firebase, Tutorial)
+├── hooks/            # Custom Hooks (lógica de datos por módulo)
+├── pages/            # Vistas principales (rutas de la aplicación)
+│   ├── Agenda/       # Módulo de calendario y eventos académicos
+│   ├── Auth/         # Login y Onboarding inicial
+│   ├── Config/       # Configuración de usuario y gestión de datos
+│   ├── Correlativas/ # Mapa visual de correlatividades
+│   ├── Dashboard/    # Pantalla principal con métricas y resumen
+│   ├── Electivas/    # Gestión de materias electivas y créditos
 │   ├── Horarios/     # Grilla semanal de cursada
-│   ├── PlanEstudio/  # Visualización y control de carrera
-│   ├── Pomodoro/     # Herramienta de enfoque
-│   └── Tableros/     # Kanban y tareas pendientes
+│   ├── PlanEstudio/  # Visualización y control del plan de carrera
+│   ├── Pomodoro/     # Herramienta de enfoque con timer
+│   └── Tableros/     # Kanban y gestión de proyectos
 ├── stores/           # Gestión de estado global (Zustand)
-├── utils/            # Funciones auxiliares y helpers
+├── utils/            # Funciones auxiliares (fondos de tableros, etc.)
 ├── App.jsx           # Componente raíz con Rutas y Lógica de Auth
 └── main.jsx          # Punto de entrada de React
 ```
@@ -42,12 +42,12 @@ Se eligió **React 19** por su ecosistema y **Vite** por su velocidad de compila
 - **Authentication**: Maneja el registro y login de usuarios.
 - **Firestore**: Base de datos NoSQL.
   - Estructura de datos centrada en el usuario: `usuarios/{uid}/...`
-  - Subcolecciones principales: `materias`, `horarios`, `todos` (tareas), `habitos`.
+  - Subcolecciones principales: `materias`, `horarios`, `todos` (tareas), `tableros`, `electivas`.
 
 ### 4. Estado Global: Zustand
 Se utiliza **Zustand** por su simplicidad frente a Redux o Context API para estados globales complejos.
 - `useUserStore`: Almacena el objeto `user` de Firebase y datos del perfil (`userData`), evitando prop-drilling de la sesión.
-- `useUIStore`: Maneja estados de interfaz como modales abiertos o sidebar colapsado.
+- `useUIStore`: Maneja estados de interfaz como sidebar colapsado.
 
 ### 5. Rutas
 **React Router v6** gestiona la navegación.
@@ -63,7 +63,7 @@ Se utiliza **Zustand** por su simplicidad frente a Redux o Context API para esta
    - Se guarda la información en `useUserStore`.
 3. **Interacción**:
    - Las páginas (ej. `DashboardPage`) leen del store o hacen suscripciones en tiempo real a Firestore.
-   - Las acciones (crear tarea, completar hábito) escriben directamente en Firestore.
+   - Las acciones (crear tarea, agregar materia) escriben directamente en Firestore.
 
 ## Consideraciones de Rendimiento
 

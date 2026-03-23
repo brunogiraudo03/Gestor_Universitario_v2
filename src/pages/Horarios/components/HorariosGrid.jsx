@@ -3,11 +3,27 @@ import { Popover, PopoverTrigger, PopoverContent, Button } from "@nextui-org/rea
 import { Edit2, Trash2, MapPin, Clock, Users, AlertTriangle } from "lucide-react";
 
 const DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-const BLOCKS = [
-  "08:00", "09:00", "10:00", "11:00", "12:00", 
-  "13:00", "14:00", "15:00", "16:00", "17:00", 
-  "18:00", "19:00", "20:00", "21:00", "22:00" , "23:00"
-];
+
+// Todos los bloques posibles
+const ALL_HOURS = Array.from({ length: 16 }, (_, i) => {
+    const h = String(8 + i).padStart(2, "0");
+    return `${h}:00`;
+}); // 08:00 – 23:00
+
+// Calcula qué horas mostrar en base a los datos reales (+ 1hr de padding)
+const getVisibleBlocks = (horarios) => {
+    if (!horarios || horarios.length === 0) {
+        return ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00"];
+    }
+    const starts = horarios.map(h => parseInt(h.inicio?.split(":")[0] || 8));
+    const ends = horarios.map(h => parseInt(h.fin?.split(":")[0] || 10));
+    const minH = Math.max(6, Math.min(...starts) - 1);
+    const maxH = Math.min(23, Math.max(...ends) + 1);
+    return ALL_HOURS.filter(b => {
+        const h = parseInt(b.split(":")[0]);
+        return h >= minH && h <= maxH;
+    });
+};
 
 // --- COMPONENTE INDIVIDUAL DE LA TARJETA ---
 const HorarioItem = ({ clase, onEdit, onDelete }) => {
@@ -16,14 +32,14 @@ const HorarioItem = ({ clase, onEdit, onDelete }) => {
     // 1. CÁLCULO SEGURO DE DURACIÓN
     const startHour = parseInt(clase.inicio.split(":")[0]);
     const endHour = parseInt(clase.fin.split(":")[0]);
-    
+
     // Si la duración es 0 o negativa (error de usuario), forzamos 1 hora para que se pueda clickear
     let duration = endHour - startHour;
     let isError = false;
 
     if (duration <= 0) {
-        duration = 1; 
-        isError = true; 
+        duration = 1;
+        isError = true;
     }
 
     // Altura: (4rem por hora) + (0.5rem de gap por hora extra)
@@ -40,21 +56,21 @@ const HorarioItem = ({ clase, onEdit, onDelete }) => {
     };
 
     return (
-        <Popover 
-            placement="right-start" 
-            offset={10} 
-            isOpen={isOpen} 
+        <Popover
+            placement="right-start"
+            offset={10}
+            isOpen={isOpen}
             onOpenChange={setIsOpen}
         >
             <PopoverTrigger>
-                <button 
+                <button
                     className="absolute top-0 left-0 right-0 z-50 w-full text-left group outline-none transition-transform hover:scale-[1.02]"
                     style={{ height: heightStyle }}
                 >
-                    <div 
+                    <div
                         className={`h-full w-full rounded-lg shadow-sm border-l-4 p-2 flex flex-col justify-start overflow-hidden relative ${isError ? 'bg-danger/10 border-danger' : ''}`}
-                        style={!isError ? { 
-                            backgroundColor: `${clase.color || '#3b82f6'}20`, 
+                        style={!isError ? {
+                            backgroundColor: `${clase.color || '#3b82f6'}20`,
                             borderColor: clase.color || '#3b82f6'
                         } : {}}
                     >
@@ -67,7 +83,7 @@ const HorarioItem = ({ clase, onEdit, onDelete }) => {
                             </span>
                             {isError && <AlertTriangle size={12} className="text-danger shrink-0" />}
                         </div>
-                        
+
                         <div className="mt-1 flex flex-wrap gap-1">
                             {clase.aula && (
                                 <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-white/50 dark:bg-black/20 text-default-600 font-medium truncate max-w-full">
@@ -83,14 +99,14 @@ const HorarioItem = ({ clase, onEdit, onDelete }) => {
                     </div>
                 </button>
             </PopoverTrigger>
-            
+
             <PopoverContent>
                 <div className="px-3 py-3 w-56">
                     <div className="flex items-center gap-2 mb-2">
                         <div className="w-3 h-3 rounded-full" style={{ background: isError ? 'red' : (clase.color || '#3b82f6') }}></div>
                         <span className="text-small font-bold flex-1 leading-tight">{clase.materia}</span>
                     </div>
-                    
+
                     <div className="space-y-2 mb-4">
                         {isError && (
                             <div className="text-xs text-danger font-bold bg-danger/10 p-2 rounded">
@@ -98,29 +114,29 @@ const HorarioItem = ({ clase, onEdit, onDelete }) => {
                             </div>
                         )}
                         <div className="text-tiny text-default-500 flex items-center gap-2">
-                            <Clock size={14} className="text-default-400"/> 
+                            <Clock size={14} className="text-default-400" />
                             {clase.inicio} - {clase.fin}
                         </div>
                         {clase.aula && (
                             <div className="text-tiny text-default-500 flex items-center gap-2">
-                                <MapPin size={14} className="text-default-400"/> 
+                                <MapPin size={14} className="text-default-400" />
                                 {clase.aula}
                             </div>
                         )}
                         {clase.comision && (
                             <div className="text-tiny text-default-500 flex items-center gap-2">
-                                <Users size={14} className="text-default-400"/> 
+                                <Users size={14} className="text-default-400" />
                                 Comisión: {clase.comision}
                             </div>
                         )}
                     </div>
-                    
+
                     <div className="flex gap-2 justify-between pt-2 border-t border-default-100">
-                        <Button size="sm" variant="light" onPress={handleEdit} startContent={<Edit2 size={14}/>}>
+                        <Button size="sm" variant="light" onPress={handleEdit} startContent={<Edit2 size={14} />}>
                             Editar
                         </Button>
                         <Button size="sm" color="danger" variant="light" onPress={handleDelete} isIconOnly>
-                            <Trash2 size={16}/>
+                            <Trash2 size={16} />
                         </Button>
                     </div>
                 </div>
@@ -131,66 +147,84 @@ const HorarioItem = ({ clase, onEdit, onDelete }) => {
 
 // --- COMPONENTE PRINCIPAL DE LA GRILLA ---
 const HorariosGrid = ({ horarios, onEdit, onDelete }) => {
-  
-  const getClassStartingHere = (day, time) => {
-    return horarios.find(h => {
-        const hDay = h.dia.toLowerCase();
-        const tStart = parseInt(h.inicio.split(":")[0]);
-        const currentBlock = parseInt(time.split(":")[0]);
-        return hDay === day.toLowerCase() && tStart === currentBlock;
-    });
-  };
 
-  return (
-    <div className="overflow-x-auto pb-10">
-      <div className="min-w-[900px]">
-        
-        {/* Header Días */}
-        <div className="grid grid-cols-7 gap-3 mb-2">
-          <div className="p-2 text-center font-bold text-default-400 text-sm">Hora</div>
-          {DAYS.map(day => (
-            <div key={day} className="p-2 text-center font-bold bg-default-100 rounded-xl dark:bg-default-50/50 uppercase text-xs tracking-wider text-default-600">
-              {day}
+    const BLOCKS = getVisibleBlocks(horarios);
+
+    const getClassStartingHere = (day, time) => {
+        return horarios.find(h => {
+            const hDay = h.dia.toLowerCase();
+            const tStart = parseInt(h.inicio.split(":")[0]);
+            const currentBlock = parseInt(time.split(":")[0]);
+            return hDay === day.toLowerCase() && tStart === currentBlock;
+        });
+    };
+
+    if (horarios.length === 0) {
+        return (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="text-5xl mb-4">📅</div>
+                <p className="text-default-500 font-medium mb-1">No hay clases cargadas</p>
+                <p className="text-sm text-default-400">
+                    Usá el botón "Agregar Clase" o cargá horarios desde una materia en Cursando
+                </p>
             </div>
-          ))}
-        </div>
+        );
+    }
 
-        {/* Grilla */}
-        <div className="relative space-y-2">
-          {BLOCKS.map((time) => (
-            <div key={time} className="grid grid-cols-7 gap-3 h-16 relative"> 
-              
-              {/* Columna Hora */}
-              <div className="flex items-center justify-center text-xs text-default-400 font-mono -mt-1">
-                {time}
-              </div>
+    return (
+        <div className="overflow-x-auto pb-10">
+            <div className="min-w-[900px]">
+                {/* Rango de horas visible */}
+                <p className="text-xs text-default-400 mb-3 text-right">
+                    Mostrando {BLOCKS[0]} – {BLOCKS[BLOCKS.length - 1]} · {horarios.length} clase{horarios.length !== 1 ? 's' : ''} cargada{horarios.length !== 1 ? 's' : ''}
+                </p>
 
-              {/* Columnas Días */}
-              {DAYS.map(day => {
-                const claseStart = getClassStartingHere(day, time);
-                
-                return (
-                  <div key={day+time} className="relative h-full w-full">
-                    {/* Fondo de celda */}
-                    <div className="absolute inset-0 border-t border-dashed border-default-200/50"></div>
+                {/* Header Días */}
+                <div className="grid grid-cols-7 gap-3 mb-2">
+                    <div className="p-2 text-center font-bold text-default-400 text-sm">Hora</div>
+                    {DAYS.map(day => (
+                        <div key={day} className="p-2 text-center font-bold bg-default-100 rounded-xl dark:bg-default-50/50 uppercase text-xs tracking-wider text-default-600">
+                            {day}
+                        </div>
+                    ))}
+                </div>
 
-                    {/* Si empieza una clase, renderizamos el Item */}
-                    {claseStart && (
-                        <HorarioItem 
-                            clase={claseStart}
-                            onEdit={onEdit}
-                            onDelete={onDelete}
-                        />
-                    )}
-                  </div>
-                );
-              })}
+                {/* Grilla */}
+                <div className="relative space-y-2">
+                    {BLOCKS.map((time) => (
+                        <div key={time} className="grid grid-cols-7 gap-3 h-16 relative">
+
+                            {/* Columna Hora */}
+                            <div className="flex items-center justify-center text-xs text-default-400 font-mono -mt-1">
+                                {time}
+                            </div>
+
+                            {/* Columnas Días */}
+                            {DAYS.map(day => {
+                                const claseStart = getClassStartingHere(day, time);
+
+                                return (
+                                    <div key={day + time} className="relative h-full w-full">
+                                        {/* Fondo de celda */}
+                                        <div className="absolute inset-0 border-t border-dashed border-default-200/50"></div>
+
+                                        {/* Si empieza una clase, renderizamos el Item */}
+                                        {claseStart && (
+                                            <HorarioItem
+                                                clase={claseStart}
+                                                onEdit={onEdit}
+                                                onDelete={onDelete}
+                                            />
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ))}
+                </div>
             </div>
-          ))}
         </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default HorariosGrid;

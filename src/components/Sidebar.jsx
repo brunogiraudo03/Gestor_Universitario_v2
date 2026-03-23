@@ -1,8 +1,8 @@
 import { Button, User, Spacer, useDisclosure, Tooltip } from "@nextui-org/react";
 import {
   LogOut, LayoutDashboard, BookOpen, Trophy,
-  Network, CalendarClock, CalendarRange, Timer, LayoutGrid,
-  ChevronLeft, ChevronRight, Target
+  Network, CalendarClock, CalendarRange, LayoutGrid, GraduationCap,
+  ChevronLeft, ChevronRight
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { auth } from "../config/firebase";
@@ -27,13 +27,12 @@ const Sidebar = ({ onClose }) => {
   const menuItems = [
     { label: "Dashboard", icon: LayoutDashboard, path: "/" },
     { label: "Plan de Estudio", icon: BookOpen, path: "/plan" },
+    { label: "Cursando", icon: GraduationCap, path: "/cursando" },
     { label: "Electivas", icon: Trophy, path: "/electivas" },
     { label: "Correlativas", icon: Network, path: "/correlativas" },
     { label: "Tableros", icon: LayoutGrid, path: "/tableros" },
-    { label: "Hábitos", icon: Target, path: "/habitos" },
     { label: "Agenda", icon: CalendarClock, path: "/agenda" },
     { label: "Horarios", icon: CalendarRange, path: "/horarios" },
-    { label: "Pomodoro", icon: Timer, path: "/pomodoro" },
   ];
 
   return (

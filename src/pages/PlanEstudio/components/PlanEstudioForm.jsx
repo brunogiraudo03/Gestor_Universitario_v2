@@ -1,24 +1,32 @@
 import { useEffect, useState } from "react";
-import { 
-  Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, 
-  Button, Input, Select, SelectItem, Divider 
+import {
+  Modal, ModalContent, ModalHeader, ModalBody, ModalFooter,
+  Button, Input, Select, SelectItem, Divider, ScrollShadow
 } from "@nextui-org/react";
-import { Save } from "lucide-react";
+import { Save, Check } from "lucide-react";
 
 const ESTADOS = [
-  {label: "Aprobada", value: "Aprobada", color: "success"},
-  {label: "Regular", value: "Regular", color: "warning"},
-  {label: "Pendiente", value: "Pendiente", color: "default"},
-  {label: "Desaprobada", value: "Desaprobada", color: "danger"},
+  { label: "Cursando", value: "Cursando", color: "primary" },
+  { label: "Aprobada", value: "Aprobada", color: "success" },
+  { label: "Regular", value: "Regular", color: "warning" },
+  { label: "Pendiente", value: "Pendiente", color: "default" },
+  { label: "Desaprobada", value: "Desaprobada", color: "danger" },
 ];
 
 const ANIOS_OPCIONES = [1, 2, 3, 4, 5, 6];
+
+const COLORES = [
+  "#ef4444", "#f97316", "#f59e0b", "#eab308", "#84cc16",
+  "#22c55e", "#10b981", "#14b8a6", "#06b6d4", "#0ea5e9",
+  "#3b82f6", "#6366f1", "#8b5cf6", "#a855f7", "#d946ef",
+  "#ec4899", "#f43f5e", "#71717a", "#78716c", "#0f172a"
+];
 
 const PlanEstudioForm = ({ isOpen, onClose, onSubmit, initialData }) => {
   const defaultValues = {
     numero: "", nombre: "", nivel: "1", modalidad: "A",
     correlativasRegular: "", correlativasAprobada: "",
-    estado: "Pendiente", nota: ""
+    estado: "Pendiente", nota: "", color: "#3b82f6"
   };
 
   const [formData, setFormData] = useState(defaultValues);
@@ -27,18 +35,18 @@ const PlanEstudioForm = ({ isOpen, onClose, onSubmit, initialData }) => {
     if (isOpen) {
       if (initialData) {
         setFormData({
-            ...initialData,
-            nivel: String(initialData.nivel || "1"),
-            numero: String(initialData.numero || ""),
-            nota: String(initialData.nota || ""),
-            correlativasRegular: initialData.correlativasRegular || "",
-            correlativasAprobada: initialData.correlativasAprobada || ""
+          ...initialData,
+          nivel: String(initialData.nivel || "1"),
+          numero: String(initialData.numero || ""),
+          nota: String(initialData.nota || ""),
+          correlativasRegular: initialData.correlativasRegular || "",
+          correlativasAprobada: initialData.correlativasAprobada || ""
         });
       } else {
         setFormData(defaultValues);
       }
     }
-  }, [isOpen, initialData?.id]); 
+  }, [isOpen, initialData?.id]);
 
   const handleSubmit = () => {
     if (!formData.nombre || !formData.numero) return;
@@ -48,29 +56,29 @@ const PlanEstudioForm = ({ isOpen, onClose, onSubmit, initialData }) => {
     const notaFloat = parseFloat(formData.nota);
 
     // Lógica del guion: Si está vacío o son espacios, pone "-"
-    const cRegular = !formData.correlativasRegular || formData.correlativasRegular.trim() === "" 
-        ? "-" 
-        : formData.correlativasRegular;
-    
-    const cAprobada = !formData.correlativasAprobada || formData.correlativasAprobada.trim() === "" 
-        ? "-" 
-        : formData.correlativasAprobada;
+    const cRegular = !formData.correlativasRegular || formData.correlativasRegular.trim() === ""
+      ? "-"
+      : formData.correlativasRegular;
+
+    const cAprobada = !formData.correlativasAprobada || formData.correlativasAprobada.trim() === ""
+      ? "-"
+      : formData.correlativasAprobada;
 
     const payload = {
       ...formData,
-      nivel: isNaN(nivelInt) ? 1 : nivelInt, 
+      nivel: isNaN(nivelInt) ? 1 : nivelInt,
       numero: isNaN(numeroInt) ? 0 : numeroInt,
       nota: isNaN(notaFloat) ? "" : notaFloat,
-      correlativasRegular: cRegular,   
-      correlativasAprobada: cAprobada  
+      correlativasRegular: cRegular,
+      correlativasAprobada: cAprobada
     };
 
     onSubmit(payload);
   };
 
   return (
-    <Modal 
-      isOpen={isOpen} onOpenChange={onClose} 
+    <Modal
+      isOpen={isOpen} onOpenChange={onClose}
       placement="center" backdrop="blur" size="2xl" scrollBehavior="inside"
       className="dark text-foreground"
       classNames={{
@@ -90,89 +98,110 @@ const PlanEstudioForm = ({ isOpen, onClose, onSubmit, initialData }) => {
               {/* FILA 1 */}
               <div className="grid grid-cols-12 gap-4">
                 <div className="col-span-3 md:col-span-2">
-                  <Input 
-                    autoFocus label="N°" type="number" variant="bordered" 
-                    classNames={{inputWrapper: "bg-white/5 border-white/10"}}
-                    value={formData.numero} 
-                    onChange={(e) => setFormData({...formData, numero: e.target.value})} 
+                  <Input
+                    autoFocus label="N°" type="number" variant="bordered"
+                    classNames={{ inputWrapper: "bg-white/5 border-white/10" }}
+                    value={formData.numero}
+                    onChange={(e) => setFormData({ ...formData, numero: e.target.value })}
                   />
                 </div>
                 <div className="col-span-9 md:col-span-10">
-                  <Input 
-                    label="Nombre" variant="bordered" 
-                    classNames={{inputWrapper: "bg-white/5 border-white/10"}}
-                    value={formData.nombre} 
-                    onChange={(e) => setFormData({...formData, nombre: e.target.value})} 
+                  <Input
+                    label="Nombre" variant="bordered"
+                    classNames={{ inputWrapper: "bg-white/5 border-white/10" }}
+                    value={formData.nombre}
+                    onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
                   />
                 </div>
               </div>
 
               {/* FILA 2 */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Select 
+                <Select
                   label="Año" variant="bordered"
-                  classNames={{trigger: "bg-white/5 border-white/10"}}
+                  classNames={{ trigger: "bg-white/5 border-white/10" }}
                   selectedKeys={new Set([formData.nivel])}
-                  onChange={(e) => setFormData({...formData, nivel: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, nivel: e.target.value })}
                 >
                   {ANIOS_OPCIONES.map((n) => <SelectItem key={String(n)} value={String(n)}>{n}°</SelectItem>)}
                 </Select>
 
-                <Select 
-                  label="Modalidad" variant="bordered" 
-                  classNames={{trigger: "bg-white/5 border-white/10"}}
-                  selectedKeys={new Set([formData.modalidad])} 
-                  onChange={(e) => setFormData({...formData, modalidad: e.target.value})}
+                <Select
+                  label="Modalidad" variant="bordered"
+                  classNames={{ trigger: "bg-white/5 border-white/10" }}
+                  selectedKeys={new Set([formData.modalidad])}
+                  onChange={(e) => setFormData({ ...formData, modalidad: e.target.value })}
                 >
                   <SelectItem key="A" value="A">Anual</SelectItem>
                   <SelectItem key="1C" value="1C">1° Cuat.</SelectItem>
                   <SelectItem key="2C" value="2C">2° Cuat.</SelectItem>
                 </Select>
 
-                <Select 
-                  label="Estado" variant="bordered" 
-                  classNames={{trigger: "bg-white/5 border-white/10"}}
+                <Select
+                  label="Estado" variant="bordered"
+                  classNames={{ trigger: "bg-white/5 border-white/10" }}
                   color={ESTADOS.find(e => e.value === formData.estado)?.color || "default"}
-                  selectedKeys={new Set([formData.estado])} 
-                  onChange={(e) => setFormData({...formData, estado: e.target.value})}
+                  selectedKeys={new Set([formData.estado])}
+                  onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
                 >
                   {ESTADOS.map((est) => <SelectItem key={est.value} value={est.value}>{est.label}</SelectItem>)}
                 </Select>
 
-                <Input 
+                <Input
                   label="Nota" placeholder="-" type="number" variant="bordered"
-                  classNames={{inputWrapper: "bg-white/5 border-white/10"}}
-                  isDisabled={formData.estado !== "Aprobada"} 
+                  classNames={{ inputWrapper: "bg-white/5 border-white/10" }}
+                  isDisabled={formData.estado !== "Aprobada"}
                   value={formData.nota}
-                  onChange={(e) => setFormData({...formData, nota: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, nota: e.target.value })}
                 />
               </div>
 
-              <Divider className="my-2 bg-white/10"/>
+              <Divider className="my-2 bg-white/10" />
               <p className="text-tiny text-default-500 font-bold uppercase tracking-wider">Sistema de Correlatividades</p>
 
               {/* FILA 3 */}
               <div className="grid grid-cols-2 gap-4">
-                <Input 
+                <Input
                   label="C. Regular" placeholder="-" variant="flat" size="sm"
                   description="IDs requeridos para cursar"
-                  classNames={{inputWrapper: "bg-white/5 border-white/10"}}
-                  value={formData.correlativasRegular} 
-                  onChange={(e) => setFormData({...formData, correlativasRegular: e.target.value})} 
+                  classNames={{ inputWrapper: "bg-white/5 border-white/10" }}
+                  value={formData.correlativasRegular}
+                  onChange={(e) => setFormData({ ...formData, correlativasRegular: e.target.value })}
                 />
-                <Input 
+                <Input
                   label="C. Aprobada" placeholder="-" variant="flat" size="sm"
                   description="IDs requeridos para rendir"
-                  classNames={{inputWrapper: "bg-white/5 border-white/10"}}
-                  value={formData.correlativasAprobada} 
-                  onChange={(e) => setFormData({...formData, correlativasAprobada: e.target.value})} 
+                  classNames={{ inputWrapper: "bg-white/5 border-white/10" }}
+                  value={formData.correlativasAprobada}
+                  onChange={(e) => setFormData({ ...formData, correlativasAprobada: e.target.value })}
                 />
               </div>
+
+              <Divider className="my-2 bg-white/10" />
+              <p className="text-tiny text-default-500 font-bold uppercase tracking-wider">Color de la materia</p>
+              <ScrollShadow orientation="horizontal" className="pb-2">
+                <div className="flex gap-2">
+                  {COLORES.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 ${formData.color === c
+                          ? 'border-white scale-110 shadow-md'
+                          : 'border-transparent opacity-60 hover:opacity-100'
+                        }`}
+                      style={{ backgroundColor: c }}
+                      onClick={() => setFormData({ ...formData, color: c })}
+                    >
+                      {formData.color === c && <Check size={14} className="text-white drop-shadow-md" />}
+                    </button>
+                  ))}
+                </div>
+              </ScrollShadow>
 
             </ModalBody>
             <ModalFooter>
               <Button color="danger" variant="light" onPress={close}>Cancelar</Button>
-              <Button color="primary" onPress={handleSubmit} startContent={<Save size={18}/>}>
+              <Button color="primary" onPress={handleSubmit} startContent={<Save size={18} />}>
                 {initialData ? "Guardar" : "Crear"}
               </Button>
             </ModalFooter>

@@ -56,24 +56,10 @@ export const tutorialSteps = [
     }
   },
   {
-    element: '#sidebar-item-habitos',
-    popover: {
-      title: '🔥 Hábitos',
-      description: 'Crea y rastrea hábitos diarios para mejorar tu productividad y bienestar académico.'
-    }
-  },
-  {
     element: '#sidebar-item-tableros',
     popover: {
       title: '📋 Tableros',
       description: 'Organiza tus proyectos y tareas de forma visual con tableros estilo Kanban.'
-    }
-  },
-  {
-    element: '#sidebar-item-pomodoro',
-    popover: {
-      title: '🍅 Pomodoro',
-      description: 'Herramienta de estudio para enfocarte sin distracciones.'
     }
   },
   {

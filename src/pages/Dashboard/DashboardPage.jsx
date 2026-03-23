@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { Button, Card, CardBody, Progress, Chip, Skeleton } from "@nextui-org/react";
 import {
-    Trophy, TrendingUp, ChevronRight, Network, School,
-    CalendarClock, CalendarRange, Sun, MapPin, AlertCircle, BookOpen, GraduationCap,
-    Flame, LayoutGrid, Target, Clock, CheckCircle2, Calendar, Star, Sparkles, X
+    Trophy, TrendingUp, ChevronRight, ChevronLeft, Network, School,
+    CalendarClock, Sun, MapPin, AlertCircle, BookOpen, GraduationCap,
+    LayoutGrid, Clock, CheckCircle2, Calendar, Sparkles, X, BookMarked, FileText, ExternalLink, CalendarRange
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useUserStore from "../../stores/useUserStore";
@@ -17,7 +17,7 @@ import { useMaterias } from "../../hooks/useMaterias";
 import { useElectivas } from "../../hooks/useElectivas";
 import { useTodos } from "../../hooks/useTodos";
 import { useHorarios } from "../../hooks/useHorarios";
-import { useHabitos } from "../../hooks/useHabitos";
+
 import { useTableros } from "../../hooks/useTableros";
 
 // Tutorial
@@ -41,10 +41,9 @@ const DashboardPage = () => {
     const { electivas, configMetas, loading: loadingElectivas } = useElectivas();
     const { todos, loading: loadingAgenda } = useTodos();
     const { horarios, loading: loadingHorarios } = useHorarios();
-    const { habitos, loading: loadingHabitos } = useHabitos();
     const { tableros, loading: loadingTableros } = useTableros();
 
-    const isLoading = loadingPlan || loadingElectivas || loadingAgenda || loadingHorarios || loadingHabitos || loadingTableros;
+    const isLoading = loadingPlan || loadingElectivas || loadingAgenda || loadingHorarios || loadingTableros;
 
     // Tutorial
     useEffect(() => {
@@ -161,7 +160,6 @@ const DashboardPage = () => {
 
         // Calcular desaprobadas
         const desaprobadasCount = materias.filter(m => m.estado === "Desaprobada").length;
-        const regularesCount = materias.filter(m => m.estado === "Regular").length;
         const pendientesCount = materias.filter(m => !m.estado || m.estado === "Pendiente").length;
 
         return {
@@ -169,7 +167,6 @@ const DashboardPage = () => {
             totalMaterias,
             aprobadasCount: aprobadasPlan.length,
             desaprobadasCount,
-            regularesCount,
             pendientesCount,
             materiasFaltantes,
             progresoPorNivel,
@@ -178,11 +175,17 @@ const DashboardPage = () => {
             modoVacaciones,
             clasesHoy,
             todosPendientes: pendientes.length,
-            habitosActivos: habitos.length,
             tablerosActivos: tableros.length,
             progresoGeneral
         };
-    }, [materias, electivas, configMetas, todos, horarios, now, habitos, tableros]);
+    }, [materias, electivas, configMetas, todos, horarios, now, tableros]);
+
+    // Materias y Electivas en estado Cursando para la sección dedicada
+    const materiasCursando = useMemo(() => {
+        const mat = materias.filter(m => m.estado === "Cursando").map(m => ({ ...m, isElectiva: false }));
+        const ele = electivas.filter(e => e.estado === "Cursando").map(e => ({ ...e, isElectiva: true }));
+        return [...mat, ...ele];
+    }, [materias, electivas]);
 
     if (isLoading) {
         return (
@@ -197,8 +200,6 @@ const DashboardPage = () => {
             </div>
         );
     }
-
-    const COLORS = ['#22c55e', '#f97316'];
 
     return (
         <div className="p-4 md:p-8 max-w-[1600px] mx-auto space-y-6 md:space-y-8">
@@ -273,19 +274,38 @@ const DashboardPage = () => {
                     </CardBody>
                 </Card>
 
-                {/* Hábitos */}
-                <Card className="border-2 border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-transparent cursor-pointer" isPressable onPress={() => navigate("/habitos")}>
+                {/* Horarios del Día */}
+                <Card className="border-2 border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-transparent cursor-pointer" isPressable onPress={() => navigate("/horarios")}>
                     <CardBody className="p-6 md:p-8 flex flex-col gap-4 min-h-[200px]">
                         <div className="flex justify-between items-start">
                             <div className="flex-1">
-                                <p className="text-orange-600 text-sm font-bold uppercase mb-3 tracking-wide">Hábitos</p>
-                                <p className="text-6xl font-black text-orange-500 leading-none">{stats.habitosActivos}</p>
+                                <p className="text-orange-600 text-sm font-bold uppercase mb-2 tracking-wide">
+                                    Hoy — {new Date().toLocaleDateString('es-AR', { weekday: 'long' }).replace(/^\w/, c => c.toUpperCase())}
+                                </p>
+                                {stats.clasesHoy && stats.clasesHoy.length > 0 ? (
+                                    <div className="flex flex-col gap-1.5">
+                                        {stats.clasesHoy.slice(0, 3).map((c, i) => (
+                                            <div key={i} className="flex items-center gap-2">
+                                                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: c.color || '#f97316' }} />
+                                                <span className="text-xs font-semibold truncate flex-1">{c.materia}</span>
+                                                <span className="text-xs text-default-500 flex-shrink-0">{c.inicio}–{c.fin}</span>
+                                            </div>
+                                        ))}
+                                        {stats.clasesHoy.length > 3 && (
+                                            <p className="text-xs text-default-400">+{stats.clasesHoy.length - 3} más</p>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <p className="text-2xl font-black text-orange-500">¡Día libre! 🎉</p>
+                                        <p className="text-xs text-default-400 mt-1">Sin clases hoy</p>
+                                    </div>
+                                )}
                             </div>
-                            <div className="p-3 bg-orange-500/20 rounded-xl">
-                                <Flame className="text-orange-500" size={32} fill="currentColor" />
+                            <div className="p-3 bg-orange-500/20 rounded-xl flex-shrink-0">
+                                <CalendarRange className="text-orange-500" size={28} />
                             </div>
                         </div>
-                        <p className="text-sm text-default-500 font-medium">Hábitos activos</p>
                     </CardBody>
                 </Card>
 
@@ -315,85 +335,179 @@ const DashboardPage = () => {
                 </Card>
             </div>
 
-            {/* Correlativas + Próxima Clase */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 auto-rows-fr">
-                <div className="lg:col-span-2 h-full">
-                    <Card className="bg-gradient-to-r from-gray-900 to-gray-800 text-white shadow-lg h-full">
-                        <CardBody className="p-6 md:p-8 flex flex-col justify-center h-full">
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                                <div>
-                                    <h3 className="text-xl md:text-2xl font-bold flex items-center gap-2 mb-2">
-                                        <Network className="text-blue-400" size={28} />
-                                        ¿Qué curso ahora?
-                                    </h3>
-                                    <p className="text-gray-300 text-sm">
-                                        Descubre qué materias puedes cursar según tus correlativas
-                                    </p>
-                                </div>
+            {/* ── Cursando este Cuatrimestre ── */}
+            <motion.section
+                key="cursando"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.05 }}
+            >
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-bold flex items-center gap-2">
+                        <BookOpen size={20} className="text-primary" />
+                        Cursando este Cuatrimestre
+                    </h2>
+                    <div className="flex items-center gap-3">
+                        {materiasCursando.length > 0 && (
+                            <Chip color="primary" variant="flat" size="sm" className="font-semibold hidden xs:flex">
+                                {materiasCursando.length} {materiasCursando.length === 1 ? 'materia' : 'materias'}
+                            </Chip>
+                        )}
+                        {materiasCursando.length > 0 && (
+                            <div className="hidden sm:flex gap-1.5">
+                                <Button isIconOnly size="sm" variant="flat" color="default" className="text-default-500 hover:text-foreground" onPress={() => {
+                                    document.getElementById('cursando-scroll-container')?.scrollBy({ left: -320, behavior: 'smooth' });
+                                }}>
+                                    <ChevronLeft size={16} />
+                                </Button>
+                                <Button isIconOnly size="sm" variant="flat" color="default" className="text-default-500 hover:text-foreground" onPress={() => {
+                                    document.getElementById('cursando-scroll-container')?.scrollBy({ left: 320, behavior: 'smooth' });
+                                }}>
+                                    <ChevronRight size={16} />
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {materiasCursando.length === 0 ? (
+                    /* Vacation state */
+                    <Card className="border border-dashed border-primary/30 bg-gradient-to-br from-primary/5 to-secondary/5">
+                        <CardBody className="p-8 flex flex-col sm:flex-row items-center gap-6">
+                            <div className="text-6xl flex-shrink-0">🏖️</div>
+                            <div className="text-center sm:text-left">
+                                <h3 className="text-xl font-black mb-1">¡Estás de vacaciones!</h3>
+                                <p className="text-default-500 text-sm mb-4 max-w-md">
+                                    Todavía no tenés materias marcadas como "Cursando" este cuatrimestre.
+                                    Cuando empiece el ciclo, marcalas desde el Plan de Estudio y aparecerán acá.
+                                </p>
                                 <Button
-                                    onPress={() => navigate("/correlativas")}
-                                    className="bg-white text-black font-bold w-full sm:w-auto"
-                                    size="lg"
-                                    endContent={<ChevronRight />}
+                                    size="sm"
+                                    color="primary"
+                                    variant="flat"
+                                    onPress={() => navigate("/plan")}
                                 >
-                                    Ver Mapa
+                                    Ir al Plan de Estudio
                                 </Button>
                             </div>
                         </CardBody>
                     </Card>
-                </div>
+                ) : (
+                    <div id="cursando-scroll-container" className="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory pt-2 scrollbar-hide">
+                        {materiasCursando.map((materia) => {
+                            const info = materia.cursandoInfo || {};
+                            const parciales = info.parciales || [];
+                            const aprobados = parciales.filter(p => p.aprobado === true).length;
+                            const total = Math.max(parseInt(info.condicionesAprobacion?.numParciales) || 0, parciales.length);
+                            const pct = total > 0 ? Math.round((aprobados / total) * 100) : 0;
+                            const color = materia.color || '#3b82f6';
 
-                {/* Próxima Clase */}
-                <div className="h-full">
-                    <Card className="border-2 border-default-200 h-full">
-                        <CardBody className="p-0 flex flex-col h-full">
-                            <div className={`w-full h-1.5 ${stats.modoVacaciones ? "bg-warning" : "bg-primary"}`}></div>
+                            return (
+                                <Card
+                                    key={materia.id}
+                                    isPressable
+                                    onPress={() => navigate(`/cursando/${materia.id}`)}
+                                    className="border border-default-100 hover:border-primary/40 transition-all cursor-pointer group flex-shrink-0 w-[260px] sm:w-[280px] h-[180px] snap-center overflow-hidden"
+                                    style={{ borderLeft: `4px solid ${color}` }}
+                                >
+                                    <CardBody className="p-4 flex flex-col h-full">
+                                        {/* Nombre + año */}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-start justify-between gap-2 mb-4">
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="font-bold text-base leading-tight line-clamp-2 group-hover:text-primary transition-colors">
+                                                        {materia.nombre}
+                                                    </p>
+                                                    {materia.nivel && (
+                                                        <Chip size="sm" variant="flat" color="default" className="mt-2 text-xs h-6">
+                                                            Año {materia.nivel}
+                                                        </Chip>
+                                                    )}
+                                                </div>
+                                                <div className="w-3 h-3 rounded-full flex-shrink-0 mt-1" style={{ backgroundColor: color }} />
+                                            </div>
+                                        </div>
 
-                            <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-                                {stats.modoVacaciones ? (
-                                    <>
-                                        <div className="p-3 bg-warning/10 rounded-full mb-3">
-                                            <Sun size={32} className="text-warning-500" />
+                                        <div className="mt-auto flex flex-col gap-4">
+                                            {/* Progreso parciales */}
+                                            {total > 0 ? (
+                                                <div>
+                                                    <div className="flex justify-between items-center mb-1.5">
+                                                        <span className="text-xs text-default-500 flex items-center gap-1">
+                                                            <FileText size={11} /> {aprobados}/{total} eval.
+                                                        </span>
+                                                        <span className="text-xs font-bold" style={{ color }}>{pct}%</span>
+                                                    </div>
+                                                    <div className="w-full h-2 bg-default-100 rounded-full overflow-hidden">
+                                                        <div
+                                                            className="h-full rounded-full transition-all"
+                                                            style={{ width: `${pct}%`, backgroundColor: color }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <p className="text-xs text-default-400 italic">Sin evaluaciones cargadas</p>
+                                            )}
+
+                                            {/* Footer */}
+                                            <div className="flex items-center justify-between pt-1 border-t border-default-100">
+                                                {info.notebookLMUrl ? (
+                                                    <button
+                                                        className="flex items-center gap-1.5 text-xs font-semibold hover:underline"
+                                                        style={{ color }}
+                                                        onClick={(e) => { e.stopPropagation(); window.open(info.notebookLMUrl, '_blank'); }}
+                                                    >
+                                                        <BookMarked size={13} /> NotebookLM
+                                                        <ExternalLink size={10} />
+                                                    </button>
+                                                ) : (
+                                                    <span className="text-xs text-default-400">
+                                                        {info.condicionesAprobacion ? '✓ Con condiciones' : 'Sin condiciones'}
+                                                    </span>
+                                                )}
+                                                <div className="flex items-center gap-1 text-xs text-default-400 group-hover:text-primary transition-colors font-semibold">
+                                                    Ver detalle
+                                                    <ChevronRight size={14} />
+                                                </div>
+                                            </div>
                                         </div>
-                                        <h4 className="text-xl font-bold mb-1">Modo Vacaciones</h4>
-                                        <p className="text-default-500 text-sm font-medium mb-4">Sin horarios cargados</p>
-                                        <Button size="sm" color="warning" variant="flat" onPress={() => navigate("/horarios")} className="font-bold">
-                                            Ver Calendario
-                                        </Button>
-                                    </>
-                                ) : stats.clasesHoy.length > 0 ? (
-                                    <>
-                                        <div className="mb-2 inline-flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full text-primary font-bold text-xs uppercase tracking-wider">
-                                            <School size={14} />
-                                            {parseInt(stats.clasesHoy[0].inicio.split(":")[0]) <= now.getHours() ? "EN CURSO" : "PRÓXIMA"}
-                                        </div>
-                                        <h3 className="text-xl font-black mb-1 text-primary-600 md:text-2xl truncate w-full px-2">{stats.clasesHoy[0].materia}</h3>
-                                        <div className="flex items-center gap-2 mt-2 font-bold text-default-700 bg-default-100 px-3 py-1.5 rounded-lg text-sm">
-                                            <Clock size={16} /> {stats.clasesHoy[0].inicio} - {stats.clasesHoy[0].fin}
-                                        </div>
-                                        {stats.clasesHoy[0].aula && (
-                                            <p className="mt-2 text-xs text-default-500 font-semibold flex items-center gap-1">
-                                                <MapPin size={12} /> Aula {stats.clasesHoy[0].aula}
-                                            </p>
-                                        )}
-                                    </>
-                                ) : (
-                                    <>
-                                        <div className="p-3 bg-success/10 rounded-full mb-3">
-                                            <CheckCircle2 size={32} className="text-success" />
-                                        </div>
-                                        <h4 className="text-xl font-bold mb-1">¡Día Terminado!</h4>
-                                        <p className="text-default-500 text-sm font-medium">Buen descanso 🚀</p>
-                                    </>
-                                )}
+                                    </CardBody>
+                                </Card>
+                            );
+                        })}
+                    </div>
+                )}
+            </motion.section>
+
+
+            <div className="w-full mb-4 md:mb-6">
+                <Card className="bg-gradient-to-r from-gray-900 to-gray-800 text-white shadow-lg w-full">
+                    <CardBody className="p-6 md:p-8 flex flex-col justify-center w-full">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div>
+                                <h3 className="text-xl md:text-2xl font-bold flex items-center gap-2 mb-2">
+                                    <Network className="text-blue-400" size={28} />
+                                    ¿Qué curso ahora?
+                                </h3>
+                                <p className="text-gray-300 text-sm">
+                                    Descubre qué materias puedes cursar según tus correlativas
+                                </p>
                             </div>
-                        </CardBody>
-                    </Card>
-                </div>
+                            <Button
+                                onPress={() => navigate("/correlativas")}
+                                className="bg-white text-black font-bold w-full sm:w-auto"
+                                size="lg"
+                                endContent={<ChevronRight />}
+                            >
+                                Ver Mapa
+                            </Button>
+                        </div>
+                    </CardBody>
+                </Card>
             </div>
 
-            {/* Gráficos + Hábitos */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 auto-rows-fr">
+            {/* Gráficos */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 auto-rows-fr">
                 {/* Progreso por Año */}
                 <Card className="border-2 border-default-200 h-full">
                     <CardBody className="p-5 flex flex-col justify-between">
@@ -406,7 +520,7 @@ const DashboardPage = () => {
                         <div className="flex-1 min-h-[220px] flex items-center">
                             {stats.progresoPorNivel.length > 0 ? (
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={stats.progresoPorNivel} barSize={32}>
+                                    <BarChart data={stats.progresoPorNivel} barSize={40}>
                                         <CartesianGrid strokeDasharray="3 3" opacity={0.1} vertical={false} />
                                         <XAxis
                                             dataKey="nivel"
@@ -471,7 +585,7 @@ const DashboardPage = () => {
                     <CardBody className="p-5 flex flex-col justify-between">
                         <div className="flex items-center justify-between mb-2">
                             <h3 className="text-base md:text-lg font-bold flex items-center gap-2">
-                                <Target size={20} className="text-warning" />
+                                <GraduationCap size={20} className="text-warning" />
                                 Estado Materias
                             </h3>
                         </div>
@@ -482,14 +596,14 @@ const DashboardPage = () => {
                                         <Pie
                                             data={[
                                                 { name: 'Aprobadas', value: stats.aprobadasCount, color: '#22c55e' },
-                                                { name: 'Desaprobadas', value: stats.desaprobadasCount, color: '#ef4444' }, // Rojo para desaprobadas
-                                                { name: 'Pendientes', value: stats.pendientesCount, color: '#d4d4d8' }   // Gris claro para pendientes
+                                                { name: 'Desaprobadas', value: stats.desaprobadasCount, color: '#ef4444' },
+                                                { name: 'Pendientes', value: stats.pendientesCount, color: '#d4d4d8' }
                                             ].filter(item => item.value > 0)}
                                             cx="50%"
                                             cy="50%"
                                             labelLine={false}
                                             label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
-                                            outerRadius={80}
+                                            outerRadius={90}
                                             dataKey="value"
                                         >
                                             {[
@@ -528,52 +642,6 @@ const DashboardPage = () => {
                                 </div>
                             )}
                         </div>
-                    </CardBody>
-                </Card>
-
-                {/* Hábitos */}
-                <Card className="border-2 border-default-200 h-full">
-                    <CardBody className="p-5 flex flex-col h-full">
-                        <div className="flex items-center justify-between mb-4 flex-shrink-0">
-                            <h3 className="text-base md:text-lg font-bold flex items-center gap-2">
-                                <Flame size={20} className="text-orange-500" />
-                                Mis Hábitos
-                            </h3>
-                            <Button size="sm" variant="light" onPress={() => navigate("/habitos")}>
-                                Ver
-                            </Button>
-                        </div>
-                        {habitos.length > 0 ? (
-                            <div className="space-y-2 flex-grow">
-                                {habitos.slice(0, 4).map((habito) => (
-                                    <div
-                                        key={habito.id}
-                                        className="flex items-center gap-2 p-2 rounded-lg bg-default-50 hover:bg-default-100 cursor-pointer transition-colors"
-                                        onClick={() => navigate("/habitos")}
-                                    >
-                                        <div
-                                            className="w-9 h-9 rounded-lg flex items-center justify-center text-lg flex-shrink-0"
-                                            style={{ backgroundColor: `${habito.color}20` }}
-                                        >
-                                            {habito.icono}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="font-semibold text-sm truncate">{habito.nombre}</p>
-                                            <p className="text-xs text-default-500 truncate">{habito.descripcion || 'Sin descripción'}</p>
-                                        </div>
-                                        <ChevronRight size={16} className="text-default-400" />
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="text-center py-8 text-default-400 flex-grow flex flex-col items-center justify-center">
-                                <Target size={36} className="mx-auto mb-2" />
-                                <p className="text-sm mb-3">Sin hábitos</p>
-                                <Button size="sm" color="warning" variant="flat" onPress={() => navigate("/habitos")}>
-                                    Crear Hábito
-                                </Button>
-                            </div>
-                        )}
                     </CardBody>
                 </Card>
             </div>
@@ -680,9 +748,7 @@ const DashboardPage = () => {
                     <div className="flex flex-wrap items-center justify-center gap-3 text-sm text-default-600">
                         <span>{stats.aprobadasCount}/{stats.totalMaterias} materias</span>
                         <span>•</span>
-                        <span>{stats.habitosActivos} hábitos</span>
-                        <span>•</span>
-                        <span>{stats.tablerosActivos} proyectos</span>
+                        <span>{stats.tablerosActivos} proyectos activos</span>
                     </div>
                 </CardBody>
             </Card>

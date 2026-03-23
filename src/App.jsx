@@ -16,11 +16,11 @@ const ElectivasPage = lazy(() => import("./pages/Electivas/ElectivasPage"));
 const CorrelativasPage = lazy(() => import("./pages/Correlativas/CorrelativasPage"));
 const TablerosPage = lazy(() => import("./pages/Tableros/TablerosPage"));
 const BoardView = lazy(() => import("./pages/Tableros/BoardView"));
-const HabitosPage = lazy(() => import("./pages/Habitos/HabitosPage"));
 const AgendaPage = lazy(() => import("./pages/Agenda/AgendaPage"));
-const PomodoroPage = lazy(() => import("./pages/Pomodoro/PomodoroPage"));
 const HorariosPage = lazy(() => import("./pages/Horarios/HorariosPage"));
 const ConfigPage = lazy(() => import("./pages/Config/ConfigPage"));
+const CursandoPage = lazy(() => import("./pages/Cursando/CursandoPage"));
+const CursandoListPage = lazy(() => import("./pages/Cursando/CursandoListPage"));
 
 // --- LAYOUT PRINCIPAL ---
 import Layout from "./components/Layout";
@@ -146,21 +146,10 @@ function App() {
                       </Layout>
                     ) : <Navigate to="/login" />} />
 
-                    <Route path="/habitos" element={user ? (
-                      <Layout>
-                        <HabitosPage />
-                      </Layout>
-                    ) : <Navigate to="/login" />} />
 
                     <Route path="/agenda" element={user ? (
                       <Layout>
                         <AgendaPage />
-                      </Layout>
-                    ) : <Navigate to="/login" />} />
-
-                    <Route path="/pomodoro" element={user ? (
-                      <Layout>
-                        <PomodoroPage />
                       </Layout>
                     ) : <Navigate to="/login" />} />
 
@@ -173,6 +162,18 @@ function App() {
                     <Route path="/config" element={user ? (
                       <Layout>
                         <ConfigPage />
+                      </Layout>
+                    ) : <Navigate to="/login" />} />
+
+                    <Route path="/cursando" element={user ? (
+                      <Layout>
+                        <CursandoListPage />
+                      </Layout>
+                    ) : <Navigate to="/login" />} />
+
+                    <Route path="/cursando/:materiaId" element={user ? (
+                      <Layout>
+                        <CursandoPage />
                       </Layout>
                     ) : <Navigate to="/login" />} />
                   </>
