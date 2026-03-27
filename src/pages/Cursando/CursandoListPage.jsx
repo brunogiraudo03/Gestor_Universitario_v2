@@ -146,7 +146,7 @@ const CursandoListPage = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.05 }}
-                    className="flex flex-wrap gap-5"
+                    className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5"
                 >
                     {materiasCursando.map((materia, i) => {
                         const info = materia.cursandoInfo || {};
@@ -170,7 +170,7 @@ const CursandoListPage = () => {
                                 <Card
                                     isPressable
                                     onPress={() => navigate(`/cursando/${materia.id}`)}
-                                    className="border border-default-100 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10 transition-all group w-full sm:w-[300px] h-[210px] shrink-0 overflow-hidden"
+                                    className="border border-default-100 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10 transition-all group w-full h-[210px] overflow-hidden"
                                     style={{ borderLeft: `4px solid ${color}` }}
                                 >
                                     <CardBody className="p-4 flex flex-col h-full overflow-hidden">

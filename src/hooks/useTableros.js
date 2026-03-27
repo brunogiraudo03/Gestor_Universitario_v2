@@ -24,7 +24,7 @@ export const useTableros = () => {
 
     const tablerosRef = useMemo(
         () => user ? collection(db, "usuarios", user.uid, "tableros") : null,
-        [user]
+        [user?.uid]
     );
 
     useEffect(() => {
@@ -53,7 +53,7 @@ export const useTableros = () => {
         );
 
         return () => unsubscribe();
-    }, [user, tablerosRef]);
+    }, [user?.uid, tablerosRef]);
 
     const agregarTablero = async (tablero) => {
         if (!tablerosRef || !user) return;
@@ -98,7 +98,7 @@ export const useTableros = () => {
             // UI Optimista: Remover inmediatamente del estado
             setTableros(prev => prev.filter(t => t.id !== id));
 
-            const batch = writeBatch(db);
+            const refsToDelete = [];
 
             // 1. Borrar todas las listas del tablero
             const listasRef = collection(db, "usuarios", user.uid, "listas");
@@ -106,7 +106,7 @@ export const useTableros = () => {
             const listasSnapshot = await getDocs(listasQuery);
 
             listasSnapshot.docs.forEach((listaDoc) => {
-                batch.delete(listaDoc.ref);
+                refsToDelete.push(listaDoc.ref);
             });
 
             // 2. Obtener todas las tarjetas del tablero
@@ -126,17 +126,22 @@ export const useTableros = () => {
 
                 // Eliminar cada todo
                 todosSnapshot.docs.forEach((todoDoc) => {
-                    batch.delete(todoDoc.ref);
+                    refsToDelete.push(todoDoc.ref);
                 });
 
                 // Eliminar la tarjeta
-                batch.delete(tarjetaDoc.ref);
+                refsToDelete.push(tarjetaDoc.ref);
             }
 
             // 4. Borrar el tablero
-            batch.delete(doc(db, "usuarios", user.uid, "tableros", id));
+            refsToDelete.push(doc(db, "usuarios", user.uid, "tableros", id));
 
-            await batch.commit();
+            // Chunk scale safe limite 
+            for (let i = 0; i < refsToDelete.length; i += 400) {
+                const batch = writeBatch(db);
+                refsToDelete.slice(i, i + 400).forEach(ref => batch.delete(ref));
+                await batch.commit();
+            }
         } catch (error) {
             console.error("Error al borrar tablero:", error);
             // Recargar tableros si falla

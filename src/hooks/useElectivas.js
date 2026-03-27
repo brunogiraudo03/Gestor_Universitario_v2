@@ -87,7 +87,7 @@ export const useElectivas = () => {
     cargarConfig();
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user?.uid]);
 
   // CRUD
   const agregarElectiva = async (electiva) => {

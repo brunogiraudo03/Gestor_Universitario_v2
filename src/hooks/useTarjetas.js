@@ -22,7 +22,7 @@ export const useTarjetas = (tableroId) => {
 
     const tarjetasRef = useMemo(
         () => user ? collection(db, "usuarios", user.uid, "tarjetas") : null,
-        [user]
+        [user?.uid]
     );
 
     useEffect(() => {
@@ -58,7 +58,7 @@ export const useTarjetas = (tableroId) => {
         );
 
         return () => unsubscribe();
-    }, [user, tableroId, tarjetasRef]);
+    }, [user?.uid, tableroId, tarjetasRef]);
 
     const agregarTarjeta = async (tarjeta) => {
         if (!user || !tarjetasRef) return;

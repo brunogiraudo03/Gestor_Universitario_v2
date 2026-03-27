@@ -61,7 +61,7 @@ export const useMaterias = () => {
     });
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user?.uid]);
 
   // Funciones del CRUD
   const agregarMateria = async (materia) => {

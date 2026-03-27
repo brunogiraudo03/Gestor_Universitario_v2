@@ -26,7 +26,7 @@ export const useTodos = () => {
       setLoading(false);
     });
     return () => unsubscribe();
-  }, [user]);
+  }, [user?.uid]);
 
   const agregarEvento = async (datos) => {
     if (!todosRef) return;

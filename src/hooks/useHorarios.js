@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { 
-  collection, query, getDocs, addDoc, deleteDoc, updateDoc, doc 
+import {
+  collection, query, getDocs, addDoc, deleteDoc, updateDoc, doc
 } from "firebase/firestore";
 import { db, auth } from "../config/firebase";
 import { toast } from "sonner";
@@ -31,7 +31,7 @@ export const useHorarios = () => {
 
   useEffect(() => {
     fetchHorarios();
-  }, [user]);
+  }, [user?.uid]);
 
   // Agregar
   const agregarHorario = async (nuevoHorario) => {

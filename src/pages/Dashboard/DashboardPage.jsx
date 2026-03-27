@@ -53,6 +53,7 @@ const DashboardPage = () => {
 
             if (forceShow || !alreadySeen) {
                 if (forceShow) localStorage.removeItem("showTutorial");
+                localStorage.setItem("hasSeenTutorial", "true"); // Guardar de inmediato
 
                 const timer = setTimeout(() => {
                     if (!document.getElementById("sidebar-menu")) return;
@@ -275,60 +276,82 @@ const DashboardPage = () => {
                 </Card>
 
                 {/* Horarios del Día */}
-                <Card className="border-2 border-orange-500/30 bg-gradient-to-br from-orange-500/10 to-transparent cursor-pointer" isPressable onPress={() => navigate("/horarios")}>
-                    <CardBody className="p-6 md:p-8 flex flex-col gap-4 min-h-[200px]">
-                        <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                                <p className="text-orange-600 text-sm font-bold uppercase mb-2 tracking-wide">
-                                    Hoy — {new Date().toLocaleDateString('es-AR', { weekday: 'long' }).replace(/^\w/, c => c.toUpperCase())}
-                                </p>
-                                {stats.clasesHoy && stats.clasesHoy.length > 0 ? (
-                                    <div className="flex flex-col gap-1.5">
-                                        {stats.clasesHoy.slice(0, 3).map((c, i) => (
-                                            <div key={i} className="flex items-center gap-2">
-                                                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: c.color || '#f97316' }} />
-                                                <span className="text-xs font-semibold truncate flex-1">{c.materia}</span>
-                                                <span className="text-xs text-default-500 flex-shrink-0">{c.inicio}–{c.fin}</span>
-                                            </div>
-                                        ))}
-                                        {stats.clasesHoy.length > 3 && (
-                                            <p className="text-xs text-default-400">+{stats.clasesHoy.length - 3} más</p>
-                                        )}
+                <Card className="border-2 border-orange-500/30 bg-gradient-to-br from-orange-500/10 via-background to-background cursor-pointer overflow-hidden relative" isPressable onPress={() => navigate("/horarios")}>
+                    <div className="absolute top-0 right-0 p-3 bg-orange-500/10 rounded-bl-3xl">
+                        <CalendarRange className="text-orange-500" size={24} />
+                    </div>
+                    <CardBody className="p-5 md:p-6 flex flex-col min-h-[200px] gap-3">
+                        <div>
+                            <p className="text-orange-600 text-xs font-black uppercase tracking-wider mb-1">
+                                Agenda de Hoy
+                            </p>
+                            <h4 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                                {new Date().toLocaleDateString('es-AR', { weekday: 'long' }).replace(/^\w/, c => c.toUpperCase())}
+                            </h4>
+                        </div>
+
+                        {stats.clasesHoy && stats.clasesHoy.length > 0 ? (
+                            <div className="flex-1 flex flex-col gap-3 mt-2 relative">
+                                {/* Linea conectora para el timeline */}
+                                <div className="absolute left-[5px] top-2 bottom-2 w-[2px] bg-orange-500/20 rounded-full" />
+
+                                {stats.clasesHoy.slice(0, 3).map((c, i) => (
+                                    <div key={i} className="flex gap-3 relative z-10">
+                                        <div className="mt-1 w-3 h-3 rounded-full border-2 border-background shadow-sm flex-shrink-0" style={{ backgroundColor: c.color || '#f97316' }} />
+                                        <div className="flex-1 min-w-0 bg-content2/50 hover:bg-content2/80 transition-colors p-2.5 rounded-xl border border-default-100">
+                                            <span className="block text-sm font-bold truncate text-foreground">{c.materia}</span>
+                                            <span className="flex items-center gap-1.5 text-xs text-default-500 mt-1 font-medium">
+                                                <Clock size={12} />
+                                                {c.inicio} - {c.fin}
+                                            </span>
+                                        </div>
                                     </div>
-                                ) : (
-                                    <div>
-                                        <p className="text-2xl font-black text-orange-500">¡Día libre! 🎉</p>
-                                        <p className="text-xs text-default-400 mt-1">Sin clases hoy</p>
+                                ))}
+                                {stats.clasesHoy.length > 3 && (
+                                    <div className="pl-6 text-xs font-bold text-orange-500/80">
+                                        +{stats.clasesHoy.length - 3} clases más
                                     </div>
                                 )}
                             </div>
-                            <div className="p-3 bg-orange-500/20 rounded-xl flex-shrink-0">
-                                <CalendarRange className="text-orange-500" size={28} />
+                        ) : (
+                            <div className="flex-1 flex flex-col items-center justify-center text-center mt-2 py-4">
+                                <div className="w-12 h-12 bg-orange-500/10 rounded-full flex items-center justify-center mb-3">
+                                    <Sun className="text-orange-500" size={24} />
+                                </div>
+                                <p className="text-lg font-black text-foreground">¡Día libre!</p>
+                                <p className="text-sm text-default-500 mt-1 font-medium">Aprovechá para descansar</p>
                             </div>
-                        </div>
+                        )}
                     </CardBody>
                 </Card>
 
                 {/* Próximo Vencimiento */}
-                <Card className="border-2 border-default-200 cursor-pointer bg-content1" isPressable onPress={() => navigate("/agenda")}>
-                    <CardBody className="p-6 md:p-8 flex flex-col gap-4 min-h-[200px]">
-                        <div className="flex justify-between items-start">
-                            <p className="text-default-600 text-sm font-bold uppercase tracking-wide">Próximo</p>
-                            <div className="p-2.5 bg-danger/10 rounded-xl">
-                                <CalendarClock className="text-danger" size={28} />
-                            </div>
+                <Card className="border-2 border-danger-500/30 bg-gradient-to-br from-danger-500/10 via-background to-background cursor-pointer overflow-hidden relative" isPressable onPress={() => navigate("/agenda")}>
+                    <div className="absolute top-0 right-0 p-3 bg-danger-500/10 rounded-bl-3xl">
+                        <CalendarClock className="text-danger" size={24} />
+                    </div>
+                    <CardBody className="p-5 md:p-6 flex flex-col min-h-[200px] gap-3">
+                        <div>
+                            <p className="text-danger-600 text-xs font-black uppercase tracking-wider mb-1">
+                                Próximo Vencimiento
+                            </p>
                         </div>
                         {stats.proximoEvento ? (
-                            <div className="flex-1 flex flex-col justify-center">
-                                <h4 className="text-xl font-bold truncate mb-2 leading-tight">{stats.proximoEvento.texto}</h4>
-                                <Chip size="sm" color="danger" variant="flat" className="font-bold border border-danger/20 self-start">
+                            <div className="flex-1 flex flex-col justify-center gap-3 relative z-10 mt-2">
+                                <h4 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent leading-tight line-clamp-2">
+                                    {stats.proximoEvento.texto}
+                                </h4>
+                                <Chip size="md" color="danger" variant="flat" className="font-bold border border-danger/20 self-start">
                                     {formatDistanceToNow(parseISO(stats.proximoEvento.fechaEntrega), { addSuffix: true, locale: es })}
                                 </Chip>
                             </div>
                         ) : (
-                            <div className="flex-1 flex flex-col justify-center">
-                                <h4 className="text-xl font-bold text-success mb-2">¡Todo al día! 🎉</h4>
-                                <p className="text-sm text-default-500">Sin tareas urgentes</p>
+                            <div className="flex-1 flex flex-col items-center justify-center text-center py-4 mt-2">
+                                <div className="w-12 h-12 bg-success-500/10 rounded-full flex items-center justify-center mb-3">
+                                    <CheckCircle2 className="text-success" size={24} />
+                                </div>
+                                <p className="text-lg font-black text-foreground">¡Todo al día! 🎉</p>
+                                <p className="text-sm text-default-500 mt-1 font-medium">Sin tareas pendientes</p>
                             </div>
                         )}
                     </CardBody>
@@ -407,10 +430,10 @@ const DashboardPage = () => {
                                     key={materia.id}
                                     isPressable
                                     onPress={() => navigate(`/cursando/${materia.id}`)}
-                                    className="border border-default-100 hover:border-primary/40 transition-all cursor-pointer group flex-shrink-0 w-[260px] sm:w-[280px] h-[180px] snap-center overflow-hidden"
+                                    className="border border-default-100 hover:border-primary/40 transition-all cursor-pointer group flex-shrink-0 w-[260px] sm:w-[280px] h-[220px] snap-center overflow-hidden"
                                     style={{ borderLeft: `4px solid ${color}` }}
                                 >
-                                    <CardBody className="p-4 flex flex-col h-full">
+                                    <CardBody className="p-4 flex flex-col h-full overflow-hidden">
                                         {/* Nombre + año */}
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-start justify-between gap-2 mb-4">
@@ -517,7 +540,7 @@ const DashboardPage = () => {
                                 Progreso por Año
                             </h3>
                         </div>
-                        <div className="flex-1 min-h-[220px] flex items-center">
+                        <div className="flex-1 min-h-[280px] flex items-center">
                             {stats.progresoPorNivel.length > 0 ? (
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={stats.progresoPorNivel} barSize={40}>
@@ -589,7 +612,7 @@ const DashboardPage = () => {
                                 Estado Materias
                             </h3>
                         </div>
-                        <div className="flex-1 min-h-[220px] flex items-center">
+                        <div className="flex-1 min-h-[280px] flex items-center">
                             {stats.totalMaterias > 0 ? (
                                 <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>

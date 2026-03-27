@@ -28,7 +28,7 @@ export const useListas = (tableroId) => {
     // Memoizar la referencia para no causar re-renders innecesarios
     const listasRef = useMemo(
         () => user ? collection(db, "usuarios", user.uid, "listas") : null,
-        [user]
+        [user?.uid]
     );
 
     useEffect(() => {
@@ -64,7 +64,7 @@ export const useListas = (tableroId) => {
         );
 
         return () => unsubscribe();
-    }, [user, tableroId, listasRef]);
+    }, [user?.uid, tableroId, listasRef]);
 
     const agregarLista = async (lista) => {
         if (!listasRef || !tableroId || !user) return;
@@ -128,7 +128,7 @@ export const useListas = (tableroId) => {
         setListas(prev => prev.filter(l => l.id !== id));
 
         try {
-            const batch = writeBatch(db);
+            const refsToDelete = [];
 
             // 1. Obtener todas las tarjetas de esta lista
             const tarjetasRef = collection(db, "usuarios", user.uid, "tarjetas");
@@ -147,17 +147,22 @@ export const useListas = (tableroId) => {
 
                 // Eliminar cada todo
                 todosSnapshot.docs.forEach((todoDoc) => {
-                    batch.delete(todoDoc.ref);
+                    refsToDelete.push(todoDoc.ref);
                 });
 
                 // Eliminar la tarjeta
-                batch.delete(tarjetaDoc.ref);
+                refsToDelete.push(tarjetaDoc.ref);
             }
 
             // 3. Eliminar la lista
-            batch.delete(doc(db, "usuarios", user.uid, "listas", id));
+            refsToDelete.push(doc(db, "usuarios", user.uid, "listas", id));
 
-            await batch.commit();
+            // Chunk and branch safe limits (max 500 ops per batch)
+            for (let i = 0; i < refsToDelete.length; i += 400) {
+                const batch = writeBatch(db);
+                refsToDelete.slice(i, i + 400).forEach(ref => batch.delete(ref));
+                await batch.commit();
+            }
         } catch (error) {
             console.error("Error al borrar lista:", error);
             setListas(backup); // Revertir

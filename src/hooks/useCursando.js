@@ -16,8 +16,8 @@ export const useCursando = (materiaId) => {
     const [loadingPlan, setLoadingPlan] = useState(true);
     const [loadingElectiva, setLoadingElectiva] = useState(true);
 
-    const planRef = useMemo(() => user && materiaId ? doc(db, 'usuarios', user.uid, 'plan', materiaId) : null, [user, materiaId]);
-    const electivaRef = useMemo(() => user && materiaId ? doc(db, 'usuarios', user.uid, 'electivas', materiaId) : null, [user, materiaId]);
+    const planRef = useMemo(() => user && materiaId ? doc(db, 'usuarios', user.uid, 'plan', materiaId) : null, [user?.uid, materiaId]);
+    const electivaRef = useMemo(() => user && materiaId ? doc(db, 'usuarios', user.uid, 'electivas', materiaId) : null, [user?.uid, materiaId]);
 
     useEffect(() => {
         if (!planRef) { setLoadingPlan(false); return; }
@@ -43,7 +43,7 @@ export const useCursando = (materiaId) => {
     const materiaRef = useMemo(() => {
         if (!user || !materia || !materiaId) return null;
         return materia.isElectiva ? electivaRef : planRef;
-    }, [user, materia, materiaId, planRef, electivaRef]);
+    }, [user?.uid, materia, materiaId, planRef, electivaRef]);
 
     const cursandoInfo = useMemo(() => ({
         notebookLMUrl: '',

@@ -28,6 +28,13 @@ export const tutorialSteps = [
     }
   },
   {
+    element: '#sidebar-item-cursando',
+    popover: {
+      title: '📖 Cursando',
+      description: 'Acá podés hacer tracking detallado de tus exámenes y notas de cada cuatrimestre.'
+    }
+  },
+  {
     element: '#sidebar-item-electivas',
     popover: {
       title: '🏆 Electivas',
