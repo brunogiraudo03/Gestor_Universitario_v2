@@ -14,22 +14,22 @@ const ConfigPage = () => {
   const navigate = useNavigate(); // Hook para navegar
   const { user } = useUserStore();
   const { isInstallable, isInstalled, installApp } = usePWA();
-  const [isDark, setIsDark] = useState(false);
+  const [isDark, setIsDark] = useState(() => {
+    const savedTheme = localStorage.getItem("theme");
+    return savedTheme === "dark" || !savedTheme;
+  });
   const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
-    // Tema Inicial
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme === "dark" || !savedTheme) { 
-        setIsDark(true);
+    // Aplicar Tema Inicial
+    if (isDark) { 
         document.documentElement.classList.add("dark");
     } else {
-        setIsDark(false);
         document.documentElement.classList.remove("dark");
     }
     const isDeviceIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     setIsIOS(isDeviceIOS);
-  }, []);
+  }, [isDark]);
 
   const handleThemeChange = (isSelected) => {
     setIsDark(isSelected);

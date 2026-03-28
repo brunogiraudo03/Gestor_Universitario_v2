@@ -27,7 +27,7 @@ import { tutorialSteps } from "../../config/tutorialSteps";
 
 const DashboardPage = () => {
     const navigate = useNavigate();
-    const { user, userData } = useUserStore();
+    const { user } = useUserStore();
     const driverRef = useRef(null);
     const [now, setNow] = useState(new Date());
 
@@ -532,11 +532,13 @@ const DashboardPage = () => {
             {/* Gráficos */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 auto-rows-fr">
                 {/* Progreso por Año */}
-                <Card className="border-2 border-default-200 h-full">
-                    <CardBody className="p-5 flex flex-col justify-between">
-                        <div className="flex items-center justify-between mb-2">
-                            <h3 className="text-base md:text-lg font-bold flex items-center gap-2">
-                                <BookOpen size={20} className="text-success" />
+                <Card className="border-2 border-success-500/30 bg-gradient-to-br from-success-500/10 via-background to-background h-full overflow-hidden relative">
+                    <div className="absolute top-0 right-0 p-3 bg-success-500/10 rounded-bl-3xl">
+                        <BookOpen className="text-success-500" size={24} />
+                    </div>
+                    <CardBody className="p-5 md:p-6 flex flex-col justify-between relative z-10">
+                        <div className="flex items-center justify-between mb-2 pr-10">
+                            <h3 className="text-base md:text-lg font-bold flex items-center gap-2 text-success-600 dark:text-success-500">
                                 Progreso por Año
                             </h3>
                         </div>
@@ -604,11 +606,13 @@ const DashboardPage = () => {
                 </Card>
 
                 {/* Estado de Materias */}
-                <Card className="border-2 border-default-200 h-full">
-                    <CardBody className="p-5 flex flex-col justify-between">
-                        <div className="flex items-center justify-between mb-2">
-                            <h3 className="text-base md:text-lg font-bold flex items-center gap-2">
-                                <GraduationCap size={20} className="text-warning" />
+                <Card className="border-2 border-warning-500/30 bg-gradient-to-br from-warning-500/10 via-background to-background h-full overflow-hidden relative">
+                    <div className="absolute top-0 right-0 p-3 bg-warning-500/10 rounded-bl-3xl">
+                        <GraduationCap className="text-warning-500" size={24} />
+                    </div>
+                    <CardBody className="p-5 md:p-6 flex flex-col justify-between relative z-10">
+                        <div className="flex items-center justify-between mb-2 pr-10">
+                            <h3 className="text-base md:text-lg font-bold flex items-center gap-2 text-warning-600 dark:text-warning-500">
                                 Estado Materias
                             </h3>
                         </div>
@@ -625,7 +629,7 @@ const DashboardPage = () => {
                                             cx="50%"
                                             cy="50%"
                                             labelLine={false}
-                                            label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
+                                            label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
                                             outerRadius={90}
                                             dataKey="value"
                                         >
@@ -672,21 +676,23 @@ const DashboardPage = () => {
             {/* Metas + Tableros */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                 {/* Metas */}
-                <Card className="border-2 border-default-200">
-                    <CardBody className="p-5">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-base md:text-lg font-bold flex items-center gap-2">
-                                <GraduationCap size={20} className="text-secondary" />
+                <Card className="border-2 border-secondary-500/30 bg-gradient-to-br from-secondary-500/10 via-background to-background overflow-hidden relative h-full">
+                    <div className="absolute top-0 right-0 p-3 bg-secondary-500/10 rounded-bl-3xl">
+                        <GraduationCap className="text-secondary-500" size={24} />
+                    </div>
+                    <CardBody className="p-5 md:p-6 relative z-10 flex flex-col">
+                        <div className="flex justify-between items-center mb-4 pr-12">
+                            <h3 className="text-base md:text-lg font-bold flex items-center gap-2 text-secondary-600 dark:text-secondary-400">
                                 Metas Electivas
                             </h3>
-                            <Button size="sm" variant="light" onPress={() => navigate("/electivas")}>
+                            <Button size="sm" variant="flat" color="secondary" className="font-bold border border-secondary-500/30 bg-secondary-500/10 text-secondary-600 dark:text-secondary-400" onPress={() => navigate("/electivas")}>
                                 Ver
                             </Button>
                         </div>
                         <div className="space-y-3">
                             {stats.metasStats.length > 0 ? (
                                 stats.metasStats.map((meta, idx) => (
-                                    <div key={idx} className="bg-default-50 p-3 rounded-lg">
+                                    <div key={idx} className="bg-background/60 backdrop-blur-md border border-secondary-500/20 p-3 rounded-xl shadow-sm">
                                         <div className="flex justify-between items-center mb-2">
                                             <span className="font-semibold text-sm">{meta.nombre}</span>
                                             <Chip size="sm" color={meta.porcentaje === 100 ? "success" : "secondary"} variant="flat">
@@ -707,48 +713,52 @@ const DashboardPage = () => {
                 </Card>
 
                 {/* Tableros */}
-                <Card className="border-2 border-default-200">
-                    <CardBody className="p-5">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-base md:text-lg font-bold flex items-center gap-2">
-                                <LayoutGrid size={20} className="text-purple-500" />
+                <Card className="border-2 border-purple-500/30 bg-gradient-to-br from-purple-500/10 via-background to-background overflow-hidden relative h-full">
+                    <div className="absolute top-0 right-0 p-3 bg-purple-500/10 rounded-bl-3xl">
+                        <LayoutGrid className="text-purple-500" size={24} />
+                    </div>
+                    <CardBody className="p-5 md:p-6 relative z-10 flex flex-col">
+                        <div className="flex justify-between items-center mb-4 pr-12">
+                            <h3 className="text-base md:text-lg font-bold flex items-center gap-2 text-purple-600 dark:text-purple-400">
                                 Mis Tableros
                             </h3>
-                            <Button size="sm" variant="light" onPress={() => navigate("/tableros")}>
+                            <Button size="sm" variant="flat" className="font-bold border border-purple-500/30 bg-purple-500/10 text-purple-600 dark:text-purple-400" onPress={() => navigate("/tableros")}>
                                 Ver
                             </Button>
                         </div>
-                        <div className="space-y-2">
+                        <div className="grid grid-cols-2 gap-3 mt-1">
                             {tableros.length > 0 ? (
                                 tableros.slice(0, 4).map((tablero) => (
                                     <div
                                         key={tablero.id}
-                                        className="flex items-center gap-2 p-2 rounded-lg bg-default-50 hover:bg-default-100 cursor-pointer transition-colors"
+                                        className="relative group rounded-xl cursor-pointer transition-all overflow-hidden h-[100px] w-full border border-purple-500/20 hover:border-purple-500/50 shadow-sm"
                                         onClick={() => navigate(`/tableros/${tablero.id}`)}
+                                        style={{
+                                            background: tablero.fondo?.tipo === 'gradient'
+                                                ? tablero.fondo.value
+                                                : tablero.fondo?.value || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                                        }}
                                     >
-                                        <div
-                                            className="w-9 h-9 rounded-lg flex items-center justify-center text-lg shadow-sm flex-shrink-0"
-                                            style={{
-                                                background: tablero.fondo?.tipo === 'gradient'
-                                                    ? tablero.fondo.value
-                                                    : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                                            }}
-                                        >
-                                            {tablero.icono || '📋'}
+                                        <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all z-0" />
+                                        <div className="relative z-10 p-3 flex flex-col h-full justify-between">
+                                            <div className="flex justify-between items-start">
+                                                <div className="w-8 h-8 rounded-lg bg-black/30 backdrop-blur-md flex items-center justify-center text-lg text-white font-bold border border-white/10">
+                                                    {tablero.icono || '📋'}
+                                                </div>
+                                                <ChevronRight size={16} className="text-white/70 group-hover:text-white transition-colors" />
+                                            </div>
+                                            <div className="w-full">
+                                                <p className="font-bold text-sm text-white truncate drop-shadow-md">{tablero.nombre}</p>
+                                            </div>
                                         </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="font-semibold text-sm truncate">{tablero.nombre}</p>
-                                            <p className="text-xs text-default-500 truncate">{tablero.descripcion || 'Sin descripción'}</p>
-                                        </div>
-                                        <ChevronRight size={16} className="text-default-400" />
                                     </div>
                                 ))
                             ) : (
-                                <div className="text-center py-8 text-default-400">
-                                    <LayoutGrid className="mx-auto mb-2" size={36} />
-                                    <p className="text-sm mb-3">Sin tableros</p>
-                                    <Button size="sm" color="primary" variant="flat" onPress={() => navigate("/tableros")}>
-                                        Crear Tablero
+                                <div className="col-span-2 text-center py-8 text-default-400 bg-background/50 rounded-xl border border-dashed border-default-200">
+                                    <LayoutGrid className="mx-auto mb-2 opacity-50" size={36} />
+                                    <p className="text-sm mb-3">Aún no tienes tableros</p>
+                                    <Button size="sm" color="secondary" variant="flat" onPress={() => navigate("/tableros")}>
+                                        Crear mi primer tablero
                                     </Button>
                                 </div>
                             )}

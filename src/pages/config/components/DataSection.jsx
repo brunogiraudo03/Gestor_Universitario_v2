@@ -72,7 +72,7 @@ const DataSection = () => {
         
         toast.dismiss(toastId);
         toast.success("Copia descargada correctamente. 📂");
-    } catch (error) {
+    } catch {
         toast.dismiss(toastId);
         toast.error("Error al exportar. Intenta nuevamente.");
     }
@@ -101,7 +101,7 @@ const DataSection = () => {
             await batch.commit();
             toast.success("¡Datos restaurados con éxito! 🚀");
             setTimeout(() => window.location.reload(), 1500);
-        } catch (error) { 
+        } catch { 
             toast.error("El archivo está dañado o no es válido."); 
         } 
         finally { setLoading(false); e.target.value = null; }
@@ -126,7 +126,7 @@ const DataSection = () => {
         
         toast.success("Cuenta reseteada a 0. Empezando de nuevo...");
         setTimeout(() => window.location.reload(), 2000);
-    } catch (e) { 
+    } catch { 
         toast.error("No se pudo resetear la cuenta. Revisa tu conexión."); 
     }
     setLoading(false);
