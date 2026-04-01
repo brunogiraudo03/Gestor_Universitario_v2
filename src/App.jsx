@@ -4,7 +4,6 @@ import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "./config/firebase";
 import useUserStore from "./stores/useUserStore";
-import { Spinner } from "@nextui-org/react";
 import { Toaster } from 'sonner';
 
 // --- TUS PÁGINAS (LAZY LOADING) ---
@@ -98,7 +97,7 @@ function App() {
           </motion.div>
         ) : (
           <div key="app-content">
-            <Suspense fallback={<div className="h-screen flex items-center justify-center"><Spinner size="lg" label="Cargando..." /></div>}>
+            <Suspense fallback={<div className="fixed inset-0 bg-background flex items-center justify-center"><BookLoader label="Cargando módulo..." /></div>}>
               <Routes>
                 {/* Ruta Login Pública */}
                 <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/" />} />

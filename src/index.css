@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;      /* Firefox */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;              /* Chrome, Safari, Opera */
+  }
+}
+
+
 /* --- ESTILOS DEL TUTORIAL (DRIVER.JS) --- */
 .driver-popover.driverjs-theme {
   background-color: #18181b; /* Zinc 950 (Dark background) */

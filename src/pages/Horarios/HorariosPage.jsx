@@ -25,11 +25,18 @@ const HorariosPage = () => {
   };
 
   // Guardar (crear o editar según corresponda)
+  // En modo editar: data es un objeto simple
+  // En modo crear: data es un array de registros (multi-día)
   const handleSave = async (data) => {
     if (editingItem) {
-        await editarHorario(editingItem.id, data);
+      // Edición: un solo registro
+      await editarHorario(editingItem.id, data);
     } else {
-        await agregarHorario(data);
+      // Creación: puede ser un array de registros (multi-día)
+      const records = Array.isArray(data) ? data : [data];
+      for (const record of records) {
+        await agregarHorario(record);
+      }
     }
     onClose();
   };

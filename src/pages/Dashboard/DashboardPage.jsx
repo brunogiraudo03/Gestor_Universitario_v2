@@ -87,7 +87,7 @@ const DashboardPage = () => {
         }
     }, [isLoading]);
 
-    // Estadísticas CORREGIDAS
+    // Estadísticas estáticas — solo se recalculan cuando cambian los datos de Firestore
     const stats = useMemo(() => {
         // 1. MATERIAS Y PROMEDIO
         const totalMaterias = materias.length;
@@ -106,7 +106,7 @@ const DashboardPage = () => {
             return {
                 nivel: `Año ${nivel}`,
                 aprobadas: aproNivel,
-                pendientes: matsNivel.length - aproNivel, // New: for stacked bar
+                pendientes: matsNivel.length - aproNivel,
                 total: matsNivel.length,
                 porcentaje: matsNivel.length > 0 ? Math.round((aproNivel / matsNivel.length) * 100) : 0
             };
@@ -125,43 +125,21 @@ const DashboardPage = () => {
             return { ...meta, creditosAcumulados: creditosAcumuladosMeta, porcentaje };
         });
 
-        // 4. AGENDA Y TAREAS - CORREGIDO
+        // 4. AGENDA Y TAREAS (todayStr se usa solo para filtrar, no necesita el timer)
         const pendientes = todos.filter(t => !t.completado);
-        const todayStr = now.toISOString().split('T')[0];
+        const todayStr = new Date().toISOString().split('T')[0];
         const proximos = pendientes.filter(t => t.fechaEntrega >= todayStr).sort((a, b) => a.fechaEntrega.localeCompare(b.fechaEntrega));
         const proximoEvento = proximos.length > 0 ? proximos[0] : null;
 
-        // 5. HORARIOS Y CLASES
-        const modoVacaciones = horarios.length === 0;
-        const hoyDiaNombre = now.toLocaleDateString('es-ES', { weekday: 'long' });
-        const horaActual = now.getHours();
-        const minutosActuales = now.getMinutes();
-
-        const normalizar = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-
-        const clasesHoy = horarios
-            .filter(h => {
-                const esHoy = normalizar(h.dia) === normalizar(hoyDiaNombre);
-                if (!esHoy) return false;
-
-                const horaFin = parseInt(h.fin.split(":")[0]);
-                const minFin = parseInt(h.fin.split(":")[1] || "0");
-
-                if (horaFin > horaActual) return true;
-                if (horaFin === horaActual && minFin > minutosActuales) return true;
-
-                return false;
-            })
-            .sort((a, b) => a.inicio.localeCompare(b.inicio));
-
-        // 6. PROGRESO GENERAL
+        // 5. PROGRESO GENERAL
         const progresoGeneral = totalMaterias > 0
             ? Math.round((aprobadasPlan.length / totalMaterias) * 100)
             : 0;
 
-        // Calcular desaprobadas
+        // 6. CONTADORES
         const desaprobadasCount = materias.filter(m => m.estado === "Desaprobada").length;
         const pendientesCount = materias.filter(m => !m.estado || m.estado === "Pendiente").length;
+        const modoVacaciones = horarios.length === 0;
 
         return {
             promedio,
@@ -174,12 +152,31 @@ const DashboardPage = () => {
             metasStats,
             proximoEvento,
             modoVacaciones,
-            clasesHoy,
             todosPendientes: pendientes.length,
             tablerosActivos: tableros.length,
             progresoGeneral
         };
-    }, [materias, electivas, configMetas, todos, horarios, now, tableros]);
+    }, [materias, electivas, configMetas, todos, horarios, tableros]);
+
+    // Clases de hoy — se recalcula cada 30s con el timer para tachar las que ya pasaron
+    const clasesHoy = useMemo(() => {
+        const normalizar = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+        const hoyDiaNombre = now.toLocaleDateString('es-ES', { weekday: 'long' });
+        const horaActual = now.getHours();
+        const minutosActuales = now.getMinutes();
+
+        return horarios
+            .filter(h => {
+                const esHoy = normalizar(h.dia) === normalizar(hoyDiaNombre);
+                if (!esHoy) return false;
+                const horaFin = parseInt(h.fin.split(":")[0]);
+                const minFin = parseInt(h.fin.split(":")[1] || "0");
+                if (horaFin > horaActual) return true;
+                if (horaFin === horaActual && minFin > minutosActuales) return true;
+                return false;
+            })
+            .sort((a, b) => a.inicio.localeCompare(b.inicio));
+    }, [horarios, now]);
 
     // Materias y Electivas en estado Cursando para la sección dedicada
     const materiasCursando = useMemo(() => {
@@ -187,6 +184,8 @@ const DashboardPage = () => {
         const ele = electivas.filter(e => e.estado === "Cursando").map(e => ({ ...e, isElectiva: true }));
         return [...mat, ...ele];
     }, [materias, electivas]);
+
+
 
     if (isLoading) {
         return (
@@ -212,8 +211,11 @@ const DashboardPage = () => {
             >
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div>
-                        <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                            Hola, {user?.displayName?.split(' ')[0] || 'Estudiante'} 👋
+                        <h1 className="text-3xl md:text-4xl font-bold flex items-center gap-2 flex-wrap">
+                            <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                                Hola, {user?.displayName?.split(' ')[0] || 'Estudiante'}
+                            </span>
+                            <span role="img" aria-label="saludo">👋</span>
                         </h1>
                         <p className="text-default-500 mt-1 flex items-center gap-2 text-sm">
                             <Calendar size={16} />
@@ -290,12 +292,12 @@ const DashboardPage = () => {
                             </h4>
                         </div>
 
-                        {stats.clasesHoy && stats.clasesHoy.length > 0 ? (
+                        {clasesHoy && clasesHoy.length > 0 ? (
                             <div className="flex-1 flex flex-col gap-3 mt-2 relative">
                                 {/* Linea conectora para el timeline */}
                                 <div className="absolute left-[5px] top-2 bottom-2 w-[2px] bg-orange-500/20 rounded-full" />
 
-                                {stats.clasesHoy.slice(0, 3).map((c, i) => (
+                                {clasesHoy.slice(0, 3).map((c, i) => (
                                     <div key={i} className="flex gap-3 relative z-10">
                                         <div className="mt-1 w-3 h-3 rounded-full border-2 border-background shadow-sm flex-shrink-0" style={{ backgroundColor: c.color || '#f97316' }} />
                                         <div className="flex-1 min-w-0 bg-content2/50 hover:bg-content2/80 transition-colors p-2.5 rounded-xl border border-default-100">
@@ -307,9 +309,9 @@ const DashboardPage = () => {
                                         </div>
                                     </div>
                                 ))}
-                                {stats.clasesHoy.length > 3 && (
+                                {clasesHoy.length > 3 && (
                                     <div className="pl-6 text-xs font-bold text-orange-500/80">
-                                        +{stats.clasesHoy.length - 3} clases más
+                                        +{clasesHoy.length - 3} clases más
                                     </div>
                                 )}
                             </div>

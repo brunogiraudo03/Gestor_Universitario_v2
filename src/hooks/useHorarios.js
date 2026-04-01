@@ -1,44 +1,54 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
-  collection, query, getDocs, addDoc, deleteDoc, updateDoc, doc
+  collection, addDoc, deleteDoc, updateDoc, doc, onSnapshot, query
 } from "firebase/firestore";
-import { db, auth } from "../config/firebase";
+import { db } from "../config/firebase";
+import useUserStore from "../stores/useUserStore";
 import { toast } from "sonner";
 
 export const useHorarios = () => {
+  const { user } = useUserStore();
   const [horarios, setHorarios] = useState([]);
   const [loading, setLoading] = useState(true);
-  const user = auth.currentUser;
 
-  const fetchHorarios = async () => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      const q = query(collection(db, "usuarios", user.uid, "horarios"));
-      const querySnapshot = await getDocs(q);
-      const data = querySnapshot.docs.map((doc) => ({
+  // Referencia estable a la colección
+  const horariosRef = useMemo(
+    () => user ? collection(db, "usuarios", user.uid, "horarios") : null,
+    [user]
+  );
+
+  // Suscripción en tiempo real con onSnapshot (igual que el resto de hooks)
+  useEffect(() => {
+    if (!user || !horariosRef) {
+      setHorarios([]);
+      setLoading(false);
+      return;
+    }
+
+    const q = query(horariosRef);
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
       setHorarios(data);
-    } catch (error) {
-      console.error(error);
-      toast.error("Error al cargar horarios");
-    } finally {
       setLoading(false);
-    }
-  };
+    }, (error) => {
+      console.error("Error al suscribirse a horarios:", error);
+      toast.error("Error al cargar horarios");
+      setLoading(false);
+    });
 
-  useEffect(() => {
-    fetchHorarios();
-  }, [user?.uid]);
+    return () => unsubscribe();
+  }, [user, horariosRef]);
 
   // Agregar
   const agregarHorario = async (nuevoHorario) => {
+    if (!horariosRef) return;
     try {
-      await addDoc(collection(db, "usuarios", user.uid, "horarios"), nuevoHorario);
+      await addDoc(horariosRef, nuevoHorario);
       toast.success("Clase agregada al horario");
-      fetchHorarios();
     } catch (error) {
       console.error(error);
       toast.error("Error al guardar");
@@ -47,10 +57,10 @@ export const useHorarios = () => {
 
   // Borrar
   const borrarHorario = async (id) => {
+    if (!user) return;
     try {
       await deleteDoc(doc(db, "usuarios", user.uid, "horarios", id));
       toast.success("Clase eliminada");
-      fetchHorarios();
     } catch (error) {
       console.error(error);
       toast.error("Error al eliminar");
@@ -59,11 +69,11 @@ export const useHorarios = () => {
 
   // Editar
   const editarHorario = async (id, datosActualizados) => {
+    if (!user) return;
     try {
       const docRef = doc(db, "usuarios", user.uid, "horarios", id);
       await updateDoc(docRef, datosActualizados);
       toast.success("Horario actualizado");
-      fetchHorarios();
     } catch (error) {
       console.error(error);
       toast.error("Error al actualizar");
