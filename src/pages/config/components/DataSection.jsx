@@ -43,6 +43,33 @@ const DataSection = () => {
     setLoading(false);
   };
 
+  // --- 1.B LIMPIEZA DE RUTINA SEMANAL ---
+  const handleCleanWeekly = async () => {
+    if (!confirm("⚠️ ¿Estás seguro de borrar TODAS tus tareas rutinarias de la vista Semanal?")) return;
+    
+    setLoading(true);
+    try {
+        const collectionRef = collection(db, "usuarios", user.uid, "weeklyTodos");
+        const snapshot = await getDocs(collectionRef);
+
+        if (snapshot.empty) {
+            toast.info("Tu rutina semanal ya está vacía. ✨");
+            setLoading(false); return;
+        }
+
+        const batch = writeBatch(db);
+        snapshot.docs.forEach((doc) => batch.delete(doc.ref));
+        await batch.commit();
+        
+        toast.success(`¡Listo! Borramos las rutinarias (semanal).`);
+        
+    } catch (error) {
+        console.error(error);
+        toast.error("Hubo un error al intentar limpiar la rutina semanal.");
+    }
+    setLoading(false);
+  };
+
   // --- 2. EXPORTAR DATOS ---
   const handleExportData = async () => {
     setLoading(true);
@@ -117,7 +144,7 @@ const DataSection = () => {
     setLoading(true);
     try {
         const batch = writeBatch(db);
-        const collections = ["materias", "horarios", "todos"];
+        const collections = ["materias", "horarios", "todos", "weeklyTodos"];
         for (const colName of collections) {
             const snap = await getDocs(collection(db, "usuarios", user.uid, colName));
             snap.docs.forEach(d => batch.delete(d.ref));
@@ -150,6 +177,24 @@ const DataSection = () => {
                 </div>
                 <Button className="w-full sm:w-auto" size="sm" color="warning" variant="flat" onPress={handleCleanAgenda} isLoading={loading}>
                     Limpiar
+                </Button>
+            </CardBody>
+        </Card>
+
+        {/* Mantenimiento Semanal */}
+        <Card className="border border-indigo-200 bg-indigo-50/50 dark:bg-indigo-900/10">
+            <CardBody className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-indigo-100 text-indigo-700 rounded-lg dark:bg-indigo-900/50 dark:text-indigo-500">
+                        <AlertTriangle size={20}/>
+                    </div>
+                    <div>
+                        <span className="font-bold text-sm">Vaciar Rutina Semanal</span>
+                        <p className="text-tiny text-default-500">Borrar todas las notas de la semana</p>
+                    </div>
+                </div>
+                <Button className="w-full sm:w-auto font-medium" size="sm" color="primary" variant="flat" onPress={handleCleanWeekly} isLoading={loading}>
+                    Borrar Todas
                 </Button>
             </CardBody>
         </Card>

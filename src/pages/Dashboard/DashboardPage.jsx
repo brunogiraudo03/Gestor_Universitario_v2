@@ -3,7 +3,7 @@ import { Button, Card, CardBody, Progress, Chip, Skeleton } from "@nextui-org/re
 import {
     Trophy, TrendingUp, ChevronRight, ChevronLeft, Network, School,
     CalendarClock, Sun, MapPin, AlertCircle, BookOpen, GraduationCap,
-    LayoutGrid, Clock, CheckCircle2, Calendar, Sparkles, X, BookMarked, FileText, ExternalLink, CalendarRange
+    LayoutGrid, Clock, CheckCircle2, Calendar, Sparkles, X, BookMarked, FileText, ExternalLink, CalendarRange, Circle
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useUserStore from "../../stores/useUserStore";
@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useMaterias } from "../../hooks/useMaterias";
 import { useElectivas } from "../../hooks/useElectivas";
 import { useTodos } from "../../hooks/useTodos";
+import { useWeeklyTodos } from "../../hooks/useWeeklyTodos";
 import { useHorarios } from "../../hooks/useHorarios";
 
 import { useTableros } from "../../hooks/useTableros";
@@ -40,10 +41,11 @@ const DashboardPage = () => {
     const { materias, loading: loadingPlan } = useMaterias();
     const { electivas, configMetas, loading: loadingElectivas } = useElectivas();
     const { todos, loading: loadingAgenda } = useTodos();
+    const { weeklyTodos, loading: loadingWeekly } = useWeeklyTodos();
     const { horarios, loading: loadingHorarios } = useHorarios();
     const { tableros, loading: loadingTableros } = useTableros();
 
-    const isLoading = loadingPlan || loadingElectivas || loadingAgenda || loadingHorarios || loadingTableros;
+    const isLoading = loadingPlan || loadingElectivas || loadingAgenda || loadingWeekly || loadingHorarios || loadingTableros;
 
     // Tutorial
     useEffect(() => {
@@ -177,6 +179,18 @@ const DashboardPage = () => {
             })
             .sort((a, b) => a.inicio.localeCompare(b.inicio));
     }, [horarios, now]);
+
+    // Tareas semanales rutinarias (para MAÑANA)
+    const mananaWeeklyTodos = useMemo(() => {
+        const manana = new Date(now);
+        manana.setDate(manana.getDate() + 1);
+        const y = manana.getFullYear();
+        const m = String(manana.getMonth() + 1).padStart(2, '0');
+        const d = String(manana.getDate()).padStart(2, '0');
+        const tomorrowFormattedDay = `${y}-${m}-${d}`;
+        
+        return weeklyTodos.filter(t => t.fecha === tomorrowFormattedDay);
+    }, [weeklyTodos, now]);
 
     // Materias y Electivas en estado Cursando para la sección dedicada
     const materiasCursando = useMemo(() => {
@@ -505,10 +519,10 @@ const DashboardPage = () => {
             </motion.section>
 
 
-            <div className="w-full mb-4 md:mb-6">
-                <Card className="bg-gradient-to-r from-gray-900 to-gray-800 text-white shadow-lg w-full">
-                    <CardBody className="p-6 md:p-8 flex flex-col justify-center w-full">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-4 md:mb-6">
+                <Card className="bg-gradient-to-r from-gray-900 to-gray-800 text-white shadow-lg w-full lg:col-span-2">
+                    <CardBody className="p-6 md:p-8 flex flex-col justify-center w-full h-full">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 h-full">
                             <div>
                                 <h3 className="text-xl md:text-2xl font-bold flex items-center gap-2 mb-2">
                                     <Network className="text-blue-400" size={28} />
@@ -527,6 +541,43 @@ const DashboardPage = () => {
                                 Ver Mapa
                             </Button>
                         </div>
+                    </CardBody>
+                </Card>
+
+                {/* Rutina Mañana */}
+                <Card className="border-2 border-indigo-500/30 bg-gradient-to-br from-indigo-500/10 via-background to-background cursor-pointer overflow-hidden relative" isPressable onPress={() => navigate("/agenda", { state: { view: 'week' } })}>
+                    <div className="absolute top-0 right-0 p-3 bg-indigo-500/10 rounded-bl-3xl">
+                        <Sparkles className="text-indigo-500" size={24} />
+                    </div>
+                    <CardBody className="p-5 md:p-6 flex flex-col min-h-[140px] gap-2">
+                        <div>
+                            <p className="text-indigo-600 text-xs font-black uppercase tracking-wider mb-1">
+                                Semanal para Mañana
+                            </p>
+                            <h4 className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent capitalize">
+                                {(()=>{
+                                     const m = new Date(now); m.setDate(m.getDate() + 1);
+                                     return `Mañana (${m.getDate()}/${m.getMonth() + 1})`;
+                                })()}
+                            </h4>
+                        </div>
+                        {mananaWeeklyTodos.length > 0 ? (
+                            <div className="flex-1 flex flex-col gap-2 mt-2">
+                                {mananaWeeklyTodos.slice(0, 3).map((t, i) => (
+                                    <div key={i} className="flex items-start gap-2 max-w-[85%]">
+                                        <Circle className="text-indigo-400 mt-0.5 shrink-0" size={14} />
+                                        <span className="text-sm font-semibold truncate leading-tight">{t.texto}</span>
+                                    </div>
+                                ))}
+                                {mananaWeeklyTodos.length > 3 && (
+                                     <span className="text-xs text-indigo-500/80 font-bold ml-5">+{mananaWeeklyTodos.length - 3} tareas más</span>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="flex-1 flex flex-col items-start justify-center mt-2">
+                                <p className="text-sm text-default-500 font-medium italic">Rutina libre para mañana.</p>
+                            </div>
+                        )}
                     </CardBody>
                 </Card>
             </div>

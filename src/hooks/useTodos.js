@@ -45,6 +45,16 @@ export const useTodos = () => {
     });
   };
 
+  const actualizarOrdenBatch = async (items) => {
+    if (!user) return;
+    const batch = writeBatch(db);
+    items.forEach(item => {
+      const ref = doc(db, "usuarios", user.uid, "todos", item.id);
+      batch.update(ref, { orden: item.orden, fechaEntrega: item.fechaEntrega });
+    });
+    await batch.commit();
+  };
+
   const toggleTodo = async (todo) => {
     if (!todosRef) return;
     await updateDoc(doc(db, "usuarios", user.uid, "todos", todo.id), {
@@ -79,5 +89,5 @@ export const useTodos = () => {
     }
   };
 
-  return { todos, loading, agregarEvento, editarEvento, toggleTodo, borrarTodo };
+  return { todos, setTodos, loading, agregarEvento, editarEvento, actualizarOrdenBatch, toggleTodo, borrarTodo };
 };
